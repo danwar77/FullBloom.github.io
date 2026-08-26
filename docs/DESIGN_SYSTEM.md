@@ -1,23 +1,24 @@
-# Sistema visual · Premium temporal
+# Sistema visual · Full Bloom
 
 ## Dirección
 
-La app debe sentirse como una experiencia Pandora de conferencia: clara, premium y con tensión de tiempo. No debe parecer un dashboard ni un videojuego oscuro.
+La app debe sentirse como una experiencia Pandora de conferencia: clara, premium, cálida y con tensión de tiempo. Debe acompañar una conversación de mesa, no parecer un dashboard ni un videojuego.
 
 ## Tokens principales
 
 - Fondo: perla/marfil.
 - Texto: tinta cálida.
 - Acento: rosa joyería.
-- Tensión: azul noche.
-- Detalle: dorado suave y plata.
+- Tensión: verde bosque profundo.
+- Detalle: dorado suave.
 
 ## Componentes
 
 - Cronómetro compacto y fijo, con números tabulares.
 - Tarjetas con borde fino, radio de 8px y sombras suaves.
 - Una acción primaria por pantalla, fija en la parte inferior para uso con pulgar.
-- Pistas y estados offline como paneles discretos, no modales bloqueantes.
+- Estados offline como paneles discretos, no modales bloqueantes.
+- Las revelaciones presentan aprendizajes por eje; nunca juicio, acierto o error.
 
 ## Reglas
 
