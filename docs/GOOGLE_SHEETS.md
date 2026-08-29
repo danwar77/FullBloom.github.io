@@ -1,13 +1,12 @@
-# Captura en Google Sheets
+# Captura en Google Sheets · Full Bloom v5
 
-1. Crea una Google Sheet de HR y una pestaña llamada `respuestas`.
-2. Abre **Extensiones → Apps Script** y pega el contenido de `google-apps-script/Code.gs`.
-3. Pulsa **Implementar → Nueva implementación → Aplicación web**.
-4. Configura **Ejecutar como: Yo** y **Quién tiene acceso: Cualquier persona**.
-5. Copia la URL terminada en `/exec` en `CONFIG.sheetEndpoint` dentro de `config.js`.
+1. Crea una Google Sheet con la pestaña `respuestas`.
+2. En **Extensiones → Apps Script**, pega [`Code.gs`](../google-apps-script/Code.gs).
+3. Despliega como **Aplicación web**, ejecutada como tú y accesible por cualquier persona.
+4. Copia la URL terminada en `/exec` en `CONFIG.sheetEndpoint`.
 
-El primer registro crea estos encabezados: `session_id`, `timestamp`, `equipo`, `idioma`, `inicio`, `características`, `arquetipo`, `sombra`, `radar_elecciones`, `radar_trampas`, `caso`, `caso_elección`, `timeouts`, `fin`.
+La app envía checkpoints no bloqueantes con `no-cors` y `text/plain`. Cada `sessionId` anónimo actualiza su misma fila, por lo que una partida no se duplica al sincronizar varias veces.
 
-La columna `session_id` es un identificador aleatorio del navegador, no un dato personal. Permite que cada checkpoint actualice la misma fila. La petición del navegador usa `no-cors`, por lo que la app nunca bloquea la sesión: conserva una copia local y deja disponible la exportación JSON.
+Columnas: `session_id`, `timestamp`, `equipo`, `idioma`, `inicio`, `competencias`, `prioridades`, `errores_puzzles`, `candidato`, `ranking`, `enfoque`, `descuidada`, `sombra`, `decision`, `timeouts`, `fin`.
 
-Para publicar la app, sirve esta carpeta estática desde GitHub Pages, Netlify o Cloudflare Pages. Para probarla localmente, ejecuta `python -m http.server 8080` dentro de la carpeta del proyecto y abre `http://127.0.0.1:8080`.
+No se almacenan cuentas, perfiles ni datos personales. Si no hay red, el estado permanece en el navegador y se reintenta al volver la conexión.

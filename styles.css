@@ -19,7 +19,21 @@
 
 * { box-sizing: border-box; }
 html { min-height: 100%; background: var(--paper); }
-body { margin: 0; min-width: 320px; min-height: 100dvh; background: var(--paper); }
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+}
+body::before,
+body::after { content: ""; position: fixed; inset: 0; pointer-events: none; }
+body::before {
+  z-index: -2;
+  background: url("20260828 - SMC 2026 - Key Visual No Text-01.png") center / cover no-repeat;
+}
+body::after { z-index: -1; background: rgb(255 248 242 / .82); }
 button, input { font: inherit; }
 button { cursor: pointer; touch-action: manipulation; }
 button:disabled { cursor: not-allowed; opacity: .48; }
@@ -75,6 +89,19 @@ h3 { margin: 0; font-size: 19px; }
 .trait { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); transition: border-color 160ms ease, background-color 160ms ease; }
 .trait:has(button[aria-pressed="true"]) { border-color: var(--rose); background: #fff4f5; }
 .trait > button { display: grid; width: 100%; min-height: 140px; align-content: start; gap: 8px; border: 0; padding: 14px; background: transparent; color: var(--ink); text-align: left; }
+.pool-group + .pool-group { margin-top: 24px; }
+.pool-group h2 { margin-top: 0; }
+.candidate-list { display: grid; gap: 14px; }
+.candidate { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.candidate.selected { border-color: var(--rose); background: #fff4f5; box-shadow: inset 3px 0 0 var(--rose); }
+.candidate > button { display: block; width: 100%; border: 0; padding: 16px; background: transparent; color: var(--ink); text-align: left; }
+.candidate > button > p { margin: 8px 0; color: var(--muted); line-height: 1.45; }
+.checklist { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 14px; line-height: 1.35; }
+.checklist .met { color: #286641; }
+.checklist .unmet { color: var(--muted); }
+.puzzle-feedback { margin: 20px 0 0; padding: 13px 14px; border-radius: 5px; line-height: 1.45; }
+.puzzle-feedback.good { background: #e4f3e7; color: #1e5a36; border-left: 3px solid #2d8650; }
+.puzzle-feedback.bad { background: #fff0f1; color: #7f1e3d; border-left: 3px solid var(--rose); }
 .trait > button:disabled { background: #f5f0ec; opacity: .55; }
 .trait strong { font-size: 17px; line-height: 1.2; }
 .trait > button > span:last-child { color: var(--muted); font-size: 13px; line-height: 1.45; }

@@ -1,26 +1,22 @@
-# SDD · Full Bloom
+# SDD · Full Bloom v5
 
 ## Objetivo
 
-Web app móvil para equipos de Store Managers durante la Store Manager Conference 2026. Guía una dinámica híbrida de 90 minutos con cartas físicas, tres actos y captura anónima. No muestra puntuación, ganadores ni respuestas correctas.
+SPA móvil y estática para equipos de Store Managers. Guía una dinámica híbrida de 90 minutos en tres actos; no puntúa, no declara ganadores y no registra datos personales.
 
 ## Arquitectura
 
-- SPA estática: `index.html`, `styles.css`, `config.js`, `content.es.js`, `content.pt.js` y `app.js`.
-- Sin dependencias, framework, compilación ni servidor propio.
-- Estado de sesión y buffer offline: `localStorage` bajo la clave configurable `fullbloom-session-v1`.
-- Captura: Google Apps Script Web App que mantiene una única fila por `sessionId` anónimo.
-
-## Contratos
-
-- Todo copy y todos los casos viven en `content.es.js` y `content.pt.js`; el contenido incompleto de PT-BR usa ES como fallback.
-- Los tiempos están centralizados en `config.js`.
-- `best` e `isTrap` existen solo en los datos para facilitación/captura; la UI no los presenta como acierto o error.
-- El juego avanza al agotar un cronómetro, registra el acto en `timeouts` y nunca bloquea por red.
-- Cada checkpoint intenta sincronizar; si falla, el registro se conserva en localStorage y puede exportarse en JSON.
+- Vanilla HTML, CSS y JavaScript: `index.html`, `styles.css`, `config.js`, `content.es.js`, `content.pt.js` y `app.js`.
+- El contenido editable está en `content.*.js`; los tiempos y endpoint, en `config.js`; la interacción y estado, en `app.js`.
+- La sesión se guarda en `localStorage` con la clave `fullbloom2-v5`. Las partidas v4 bajo su clave previa se conservan sin tocarse.
+- La captura usa Google Apps Script y un `sessionId` anónimo para actualizar una sola fila por equipo en cada checkpoint.
 
 ## Flujo
 
-`lang → welcome → act1_select → act1_reveal → act2_radar → trap_reveal → act3_case → close`
+`lang → welcome → req → priorities → puzzle → candidates → act2diag → ranking → enfoque → reveal → routeShadow → case → close`
 
-Acto 1 exige cuatro rasgos salvo timeout. La sombra dominante se resuelve por peso y, ante empate, por orden de selección. Acto 2 muestra un caso aleatorio por eje. Acto 3 resuelve un caso por la sombra dominante o usa un fallback aleatorio si no existe.
+Los cronómetros de acto no bloquean: al expirar persisten lo elegido, registran el timeout y avanzan. Las ventanas de deliberación aplican en requisición, candidato y caso. El juego puede reanudarse tras refresh y la sincronización no bloquea el recorrido.
+
+## Contenido provisional
+
+El HTML de referencia v5 no fue entregado. Por eso los candidatos, distractores y preguntas de entrevista incluidos son provisionales y están agrupados en `content.es.js` para que HR pueda sustituirlos sin modificar `app.js`.

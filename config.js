@@ -1,14 +1,10 @@
 window.CONFIG = {
   gameName: 'Full Bloom',
-  tagline: {
-    es: 'cada decisión hace florecer o marchitar',
-    pt: 'cada decisão faz florescer ou murchar',
-  },
-  choose: 4,
-  radarCasesPerAxis: 1,
-  timers: { act1: 900, act2: 900, act3: 900 },
-  deliberationMin: { act1: 60, act3case: 45 },
-  // Sustituir por la URL /exec del Web App de Apps Script antes del evento.
+  tagline: 'Hacer Florecer el Talento a través del Liderazgo',
+  durationLabel: '90',
+  numPriorities: 3,
+  timers: { act1: 1500, act2: 900, act3: 900 },
+  deliberationMin: { req: 15, candidate: 15, act3case: 15 },
   sheetEndpoint: '',
-  storageKey: 'fullbloom-session-v1',
+  storageKey: 'fullbloom2-v5',
 };

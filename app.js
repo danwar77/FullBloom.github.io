@@ -1,260 +1,86 @@
 (() => {
   const { CONFIG, CONTENT_ES, CONTENT_PT } = window;
   const app = document.querySelector('#app');
+  let memory = null, timerId = null;
   let state = load() || fresh();
-  let timerId = null;
   let showResume = Boolean(state.startedAt && !state.finishedAt);
 
-  function fresh() {
-    return {
-      screen: 'lang', lang: null, teamAlias: '', sessionId: crypto.randomUUID(), startedAt: null, finishedAt: null,
-      activeAct: null, actStartedAt: null, actDeadline: null, deliberationStartedAt: null,
-      act1: { chosen: [], archetypeId: null, dominantShadow: null },
-      act2: { caseIds: {}, choices: {}, trapsFallen: [] }, act3: { challengeId: null, choice: null },
-      timeouts: [], pendingSync: false, lastSyncAt: null,
-    };
-  }
-
-  function load() {
-    try { return JSON.parse(localStorage.getItem(CONFIG.storageKey)); } catch { return null; }
-  }
-  function save() { localStorage.setItem(CONFIG.storageKey, JSON.stringify(state)); }
+  function fresh() { return { screen: 'lang', lang: null, alias: '', sessionId: crypto.randomUUID(), startedAt: null, finishedAt: null, activeAct: null, actDeadline: null, deliberationStartedAt: null, act1: { selected: [], priorities: [], puzzleIdx: 0, puzzleErrors: {}, puzzleSelection: {}, feedback: {}, puzzleOrder: {}, candidate: null }, act2: { ranking: [], enfoque: {}, focusIdx: 0, neglected: null }, act3: { shadow: null, choice: null }, timeouts: [], pendingSync: false, lastSyncAt: null }; }
+  function load() { try { return JSON.parse(localStorage.getItem(CONFIG.storageKey)); } catch { return memory; } }
+  function save() { memory = state; try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(state)); } catch {} }
   function reset() { state = fresh(); showResume = false; save(); render(); }
-  function copy(target, source) {
-    Object.entries(source || {}).forEach(([key, value]) => {
-      if (value && typeof value === 'object' && !Array.isArray(value)) target[key] = copy({ ...(target[key] || {}) }, value);
-      else target[key] = value;
-    });
-    return target;
-  }
-  function C() { return state.lang === 'pt' ? copy(copy({}, CONTENT_ES), CONTENT_PT) : CONTENT_ES; }
-  function esc(value) { return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char])); }
-  function actName(id) { return id === 'act1' ? '1 · La selección' : id === 'act2' ? '2 · Radar del Onboarding' : '3 · El caso'; }
-  function fmt(seconds) { const value = Math.max(0, seconds); return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`; }
-  function secondsLeft() { return state.actDeadline ? Math.max(0, Math.ceil((state.actDeadline - Date.now()) / 1000)) : 0; }
-  function deliberationLeft() {
-    if (!state.deliberationStartedAt) return 0;
-    const seconds = state.screen === 'act1_select' ? CONFIG.deliberationMin.act1 : CONFIG.deliberationMin.act3case;
-    return Math.max(0, Math.ceil(((state.deliberationStartedAt + seconds * 1000) - Date.now()) / 1000));
-  }
-  function byId(list, id) { return list.find((item) => item.id === id); }
-  function selectedCharacteristics() { return state.act1.chosen.map((id) => byId(C().characteristics, id)).filter(Boolean); }
+  function merge(a, b) { Object.entries(b || {}).forEach(([k, v]) => { a[k] = v && typeof v === 'object' && !Array.isArray(v) ? merge({ ...(a[k] || {}) }, v) : v; }); return a; }
+  function C() { return state.lang === 'pt' ? merge(merge({}, CONTENT_ES), CONTENT_PT) : CONTENT_ES; }
+  function esc(v) { return String(v ?? '').replace(/[&<>'"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;' }[c])); }
+  function replace(v, data) { return String(v).replace(/\{(\w+)\}/g, (_, k) => data[k] ?? ''); }
+  function byId(xs, id) { return xs.find(x => x.id === id); }
+  function left() { return state.actDeadline ? Math.max(0, Math.ceil((state.actDeadline - Date.now()) / 1000)) : 0; }
+  function fmt(n) { return `${String(Math.floor(Math.max(0,n)/60)).padStart(2,'0')}:${String(Math.max(0,n)%60).padStart(2,'0')}`; }
+  function deliberationLeft() { if (!state.deliberationStartedAt) return 0; const key = state.screen === 'req' ? 'req' : state.screen === 'candidates' ? 'candidate' : 'act3case'; return Math.max(0, Math.ceil((state.deliberationStartedAt + CONFIG.deliberationMin[key] * 1000 - Date.now()) / 1000)); }
+  function activeCandidate() { return byId(C().CANDIDATES, state.act1.candidate); }
+  function actTitle(id) { return C().acts[id] || id; }
 
-  function startAct(act, screen) {
-    state.activeAct = act;
-    state.actStartedAt = Date.now();
-    state.actDeadline = state.actStartedAt + CONFIG.timers[act] * 1000;
-    state.screen = screen;
-    state.deliberationStartedAt = act === 'act1' ? Date.now() : null;
-    save(); render();
-  }
-  function go(screen, options = {}) {
-    state.screen = screen;
-    state.activeAct = options.keepTimer ? state.activeAct : null;
-    state.actStartedAt = options.keepTimer ? state.actStartedAt : null;
-    state.actDeadline = options.keepTimer ? state.actDeadline : null;
-    state.deliberationStartedAt = options.deliberation ? Date.now() : null;
-    save(); render();
-  }
-  function markTimeout(act) {
-    if (!state.timeouts.includes(act)) state.timeouts.push(act);
-  }
+  function startAct(id, screen) { state.activeAct = id; state.actDeadline = Date.now() + CONFIG.timers[id] * 1000; state.screen = screen; state.deliberationStartedAt = screen === 'req' || screen === 'case' ? Date.now() : null; save(); render(); }
+  function go(screen, opts = {}) { state.screen = screen; if (opts.deliberation) state.deliberationStartedAt = Date.now(); save(); render(); }
   function checkpoint() { state.pendingSync = true; save(); syncToSheet(); }
+  function markTimeout() { if (!state.timeouts.includes(state.activeAct)) state.timeouts.push(state.activeAct); }
+  function eligible() { return state.act1.selected.filter(id => !byId(C().POOL, id)?.dist); }
+  function normalizePriorities() { if (state.act1.priorities.length < CONFIG.numPriorities) state.act1.priorities = eligible().slice(0, CONFIG.numPriorities); }
+  function endAct1() { normalizePriorities(); state.activeAct = null; state.actDeadline = null; state.deliberationStartedAt = null; go('candidates'); checkpoint(); }
+  function endAct2() { if (state.act2.ranking.length !== C().DIMENSIONS.length) state.act2.ranking = C().DIMENSIONS.map(d => d.id); state.act2.neglected = state.act2.ranking.at(-1); state.activeAct = null; state.actDeadline = null; state.deliberationStartedAt = null; go('reveal'); checkpoint(); }
+  function endAct3() { state.activeAct = null; state.actDeadline = null; state.deliberationStartedAt = null; state.finishedAt = new Date().toISOString(); go('close'); checkpoint(); }
+  function handleTimeout() { if (!state.activeAct || left() > 0) return; markTimeout(); if (state.activeAct === 'act1' && state.screen === 'puzzle') { state.activeAct = null; state.actDeadline = null; save(); render(); } else if (state.activeAct === 'act1') endAct1(); else if (state.activeAct === 'act2') endAct2(); else endAct3(); }
+  function record() { return { sessionId: state.sessionId, alias: state.alias, lang: state.lang, startedAt: state.startedAt, finishedAt: state.finishedAt || null, act1: { selected: state.act1.selected, priorities: state.act1.priorities, candidate: state.act1.candidate, puzzleErrors: state.act1.puzzleErrors }, act2: { ranking: state.act2.ranking, enfoque: state.act2.enfoque, neglected: state.act2.neglected }, act3: { shadow: state.act3.shadow, choice: state.act3.choice }, timeouts: state.timeouts }; }
+  async function syncToSheet() { if (!CONFIG.sheetEndpoint || !navigator.onLine || !state.pendingSync) return; try { await fetch(CONFIG.sheetEndpoint, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(record()) }); state.pendingSync = false; state.lastSyncAt = new Date().toISOString(); save(); render(); } catch { save(); } }
+  function exportRecord() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(record(),null,2)], { type:'application/json' })); a.download = `full-bloom-${(state.alias || 'equipo').replace(/\s+/g,'-').toLowerCase()}.json`; a.click(); URL.revokeObjectURL(a.href); }
 
-  function dominantFamily(chosen) {
-    const counts = chosen.reduce((result, item) => ({ ...result, [item.familia]: (result[item.familia] || 0) + 1 }), {});
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'empuje';
-  }
-  function resolveAct1() {
-    const selected = selectedCharacteristics();
-    const ordered = [...selected].sort((a, b) => (b.peso - a.peso) || (state.act1.chosen.indexOf(a.id) - state.act1.chosen.indexOf(b.id)));
-    const key = ordered[0];
-    const family = dominantFamily(selected);
-    const archetype = C().archetypes.find((item) => item.match.dominantFamily === family && item.match.keyCharacteristic === key?.id)
-      || C().archetypes.find((item) => item.match.dominantFamily === family && !item.match.keyCharacteristic)
-      || C().archetypes[0];
-    return { archetype, dominantShadow: key?.shadowId || null };
-  }
-  function confirmAct1() {
-    const result = resolveAct1();
-    state.act1.archetypeId = result.archetype.id;
-    state.act1.dominantShadow = result.dominantShadow;
-    go('act1_reveal'); checkpoint();
-  }
-  function caseForAxis(axis) {
-    return byId(axis.cases, state.act2.caseIds[axis.id]) || axis.cases[0];
-  }
-  function prepareRadar() {
-    C().radar.axes.forEach((axis) => {
-      if (state.act2.caseIds[axis.id]) return;
-      const cases = CONFIG.radarCasesPerAxis === 2 ? axis.cases : [axis.cases[Math.floor(Math.random() * axis.cases.length)]];
-      state.act2.caseIds[axis.id] = cases.map((item) => item.id);
-    });
-  }
-  function radarCases(axis) { return (state.act2.caseIds[axis.id] || []).map((id) => byId(axis.cases, id)).filter(Boolean); }
-  function completeRadar() {
-    state.act2.trapsFallen = C().radar.axes.flatMap((axis) => radarCases(axis).filter((item) => byId(item.options, state.act2.choices[item.id])?.isTrap).map(() => axis.id));
-    go('trap_reveal'); checkpoint();
-  }
-  function resolveChallenge() {
-    return C().challenges.find((item) => item.shadowId === state.act1.dominantShadow) || C().challenges[Math.floor(Math.random() * C().challenges.length)];
-  }
-  function finishGame() {
-    state.finishedAt = new Date().toISOString();
-    go('close'); checkpoint();
-  }
-  function handleTimeout() {
-    const act = state.activeAct;
-    if (!act || secondsLeft() > 0) return;
-    markTimeout(act);
-    if (act === 'act1') confirmAct1();
-    if (act === 'act2') completeRadar();
-    if (act === 'act3') finishGame();
-  }
-  function record() {
-    return {
-      sessionId: state.sessionId, teamAlias: state.teamAlias, lang: state.lang, startedAt: state.startedAt, finishedAt: state.finishedAt || null,
-      act1: state.act1, act2: { choices: state.act2.choices, trapsFallen: state.act2.trapsFallen }, act3: state.act3, timeouts: state.timeouts,
-    };
-  }
-  async function syncToSheet() {
-    if (!CONFIG.sheetEndpoint || !navigator.onLine || !state.pendingSync) return;
-    try {
-      await fetch(CONFIG.sheetEndpoint, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(record()) });
-      state.pendingSync = false;
-      state.lastSyncAt = new Date().toISOString();
-      save(); render();
-    } catch { save(); }
-  }
-  function exportRecord() {
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(new Blob([JSON.stringify(record(), null, 2)], { type: 'application/json' }));
-    link.download = `full-bloom-${state.teamAlias.replace(/\s+/g, '-').toLowerCase() || 'equipo'}.json`;
-    link.click(); URL.revokeObjectURL(link.href);
-  }
+  function shell(body, dark = false) { const c = C(), timer = state.activeAct ? `<div class="timer"><span>${esc(actTitle(state.activeAct))}</span><strong data-timer>${fmt(left())}</strong></div>` : ''; const offline = !navigator.onLine ? `<p class="notice" role="status">${esc(c.ui.offline)}</p>` : ''; return `<div class="app-shell"><header class="topbar"><div><p class="brand">Full <i>Bloom</i></p><p class="tagline">${esc(CONFIG.tagline)}</p></div>${timer}</header>${offline}<section class="screen ${dark ? 'dark-screen' : ''}">${body}</section></div>`; }
+  function primary(label, action, disabled = false, extra = '') { return `<button class="button primary" data-action="${action}" data-label="${esc(label)}" ${disabled ? 'disabled' : ''} ${extra}>${esc(label)}</button>`; }
+  function option(item, active, action, extra = '') { return `<button class="option ${active ? 'selected' : ''}" data-action="${action}" ${extra} aria-pressed="${active}"><b>${esc(item.id || '')}</b><span>${esc(item.text || item.label || item.name)}</span></button>`; }
 
-  function shell(body, options = {}) {
-    const content = C();
-    const timer = state.activeAct ? `<div class="timer" aria-label="${esc(content.ui.timer)}"><span>${esc(actName(state.activeAct))}</span><strong data-timer-value>${fmt(secondsLeft())}</strong></div>` : '';
-    const offline = !navigator.onLine ? `<p class="notice" role="status">${esc(content.ui.offline)}</p>` : '';
-    return `<div class="app-shell"><header class="topbar"><div><p class="brand">Full <i>Bloom</i></p><p class="tagline">${esc(CONFIG.tagline[state.lang] || CONFIG.tagline.es)}</p></div>${timer}</header>${offline}<section class="screen ${options.dark ? 'dark-screen' : ''}">${body}</section></div>`;
-  }
-  function primary(label, action, disabled = false, extra = '') { return `<button class="button primary" data-action="${action}" ${disabled ? 'disabled' : ''} ${extra}>${esc(label)}</button>`; }
-  function secondary(label, action) { return `<button class="button secondary" data-action="${action}">${esc(label)}</button>`; }
+  function renderLang() { app.innerHTML = `<div class="app-shell intro"><section class="screen intro-screen"><p class="brand large"><img class="brand-mark" src="icono_pandora.webp" alt="Pandora" /><span>Full <i>Bloom</i></span></p><p class="tagline">${esc(CONFIG.tagline)}</p><h1>${esc(CONTENT_ES.ui.language)}</h1><p class="lead">${esc(CONTENT_ES.ui.welcomeIntro)}</p><div class="language-actions"><button class="language-button" data-action="lang" data-lang="es">Español <small>(LATAM)</small></button><button class="language-button" data-action="lang" data-lang="pt">Português <small>(Brasil)</small></button></div></section><footer class="welcome-credit">© 2026, Danwar77 <a href="https://danwar77.github.io/hologram-web/#galeria" target="_blank" rel="noreferrer" aria-label="Galería holográfica de Danwar77"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.5c-2.23.49-2.7-.95-2.7-.95-.36-.93-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.51-1.08-1.78-.2-3.65-.89-3.65-3.96 0-.88.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.66 7.66 0 0 1 8 1.87c.68 0 1.36.09 2 .27 1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.08-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z" /></svg><span>GitHub</span></a></footer></div>`; }
+  function renderWelcome() { const c=C(); app.innerHTML=shell(`<p class="eyebrow">${esc(c.welcome.eyebrow)}</p><h1>${esc(c.welcome.title)}</h1><p class="lead">${esc(c.welcome.premise)}</p><p class="rule">${esc(replace(c.welcome.rules,{duration:CONFIG.durationLabel}))}</p><label class="field"><span>${esc(c.welcome.aliasLabel)}</span><input id="team-alias" maxlength="30" autocomplete="off" value="${esc(state.alias)}"><small>${esc(c.welcome.aliasHelp)}</small></label><div class="action-bar">${primary(c.ui.start,'start',!state.alias.trim())}</div>`); }
+  function renderReq() { const c=C(), groups={}; c.POOL.forEach(p => (groups[p.block] ||= []).push(p)); const cards=Object.entries(groups).map(([block, list]) => `<section class="pool-group"><h2>${esc(block)}</h2><div class="trait-grid">${list.map(p=>{const on=state.act1.selected.includes(p.id);return `<article class="trait ${on?'selected':''}"><button data-action="req-toggle" data-id="${p.id}" aria-pressed="${on}"><span class="trait-index">${on?'✓':'○'}</span><strong>${esc(p.name)}</strong></button></article>`;}).join('')}</div></section>`).join(''); const wait=deliberationLeft(); app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act1)}</p><h1>${esc(c.req.title)}</h1><p class="lead">${esc(c.req.intro)}</p><p class="selection-count">${state.act1.selected.length} ${esc(c.ui.selected)} · ${esc(c.ui.minimum)} ${CONFIG.numPriorities}</p><div class="pool-list">${cards}</div><div class="action-bar"><p class="helper">${wait?esc(c.ui.deliberate):''}</p>${primary(wait?`${c.ui.confirm} (${wait}s)`:c.ui.confirm,'req-confirm',state.act1.selected.length<CONFIG.numPriorities||wait>0,'data-deliberation')}</div>`); }
+  function renderPriorities() { const c=C(), items=eligible().map(id=>byId(c.POOL,id)).sort((a,b)=>b.w-a.w); app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act1)}</p><h1>${esc(c.req.priorityTitle)}</h1><p class="lead">${esc(c.req.priorityIntro)}</p><div class="options">${items.map(p=>{const n=state.act1.priorities.indexOf(p.id);return `<button class="option ${n>=0?'selected':''}" data-action="priority" data-id="${p.id}" aria-pressed="${n>=0}"><b>${n>=0?n+1:'+'}</b><span>${esc(p.name)}</span></button>`;}).join('')}</div><div class="action-bar">${primary(c.ui.interview,'interview',state.act1.priorities.length!==CONFIG.numPriorities)}</div>`); }
+  function puzzleOptions(id, puzzle) { if (!state.act1.puzzleOrder[id]) state.act1.puzzleOrder[id] = puzzle.options.map((_,i)=>i).sort(()=>Math.random()-.5); return state.act1.puzzleOrder[id].map(i=>({ ...puzzle.options[i], id:String(i) })); }
+  function renderPuzzle() { const c=C(), id=state.act1.priorities[state.act1.puzzleIdx], p=c.PUZZLES[id]; if (!p) { state.act1.puzzleIdx++; save(); render(); return; } const selected=state.act1.puzzleSelection[id] || [], feedback=state.act1.feedback[id], opts=puzzleOptions(id,p); const title=byId(c.POOL,id)?.name||id; const body=opts.map(o=>option(o,selected.includes(o.id),'puzzle-choice',`data-id="${o.id}" data-multi="${Boolean(p.multi)}"`)).join(''); let action=primary(c.ui.confirm,'puzzle-check',selected.length===0); if(feedback?.ok) action=primary(c.ui.next,'puzzle-next'); const note=feedback ? `<p class="puzzle-feedback ${feedback.ok?'good':'bad'}">${esc(feedback.text)}</p>` : ''; app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act1)} · ${state.act1.puzzleIdx+1}/${state.act1.priorities.length}</p><h1>${esc(title)}</h1><p class="lead">${esc(p.multi?c.interview.multi:c.interview.single)}</p><div class="options">${body}</div>${note}<div class="action-bar">${action}</div>`); }
+  function renderCandidates() { const c=C(), wait=deliberationLeft(); const cards=c.CANDIDATES.map(x=>{const selected=state.act1.candidate===x.id; const checks=c.REQS.map((r,i)=>`<li class="${x.met[i]?'met':'unmet'}">${x.met[i]?'☑':'☐'} ${esc(r)}</li>`).join(''); return `<article class="candidate ${selected?'selected':''}"><button data-action="candidate" data-id="${x.id}" aria-pressed="${selected}"><p class="axis-label">${esc(x.tag)} · ${x.age}</p><h2>${esc(x.name)}</h2><p>${esc(x.destaca)}</p><p><b>${esc(c.candidates.cv)}:</b> ${esc(x.cv)}</p><h3>${esc(c.candidates.requirements)}</h3><ul class="checklist">${checks}</ul></button></article>`;}).join(''); app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act1)}</p><h1>${esc(c.candidates.title)}</h1><p class="lead">${esc(c.candidates.intro)}</p><div class="candidate-list">${cards}</div><div class="action-bar"><p class="helper">${wait?esc(c.ui.deliberate):''}</p>${primary(wait?`${c.ui.hire} (${wait}s)`:c.ui.hire,'hire',!state.act1.candidate||wait>0,'data-deliberation')}</div>`); }
+  function renderDiag() { const c=C(), x=activeCandidate(); if (!x) { go('candidates'); return; } const gaps=c.REQS.filter((_,i)=>!x.met[i]); app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act2)}</p><h1>${esc(replace(c.candidates.hired,{name:x.name}))}</h1><p class="lead">${esc(c.candidates.gaps)}</p><ul class="checklist">${(gaps.length?gaps:[c.candidates.noGaps]).map(g=>`<li class="unmet">☐ ${esc(g)}</li>`).join('')}</ul><div class="action-bar">${primary(c.ui.plan,'start-act2')}</div>`); }
+  function renderRanking() { const c=C(); app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act2)}</p><h1>${esc(c.onboarding.rankTitle)}</h1><p class="lead">${esc(c.onboarding.rankIntro)}</p><div class="options">${c.DIMENSIONS.map(d=>{const n=state.act2.ranking.indexOf(d.id);return `<button class="option ${n>=0?'selected':''}" data-action="rank" data-id="${d.id}"><b>${n>=0?n+1:'+'}</b><span>${esc(d.label)}</span></button>`;}).join('')}</div><div class="action-bar">${primary(c.ui.continue,'focus',state.act2.ranking.length!==c.DIMENSIONS.length)}</div>`); }
+  function renderFocus() { const c=C(), id=state.act2.ranking[state.act2.focusIdx], d=byId(c.DIMENSIONS,id); if (!d) { endAct2(); return; } const choices=[{id:'intencional',label:c.onboarding.intentional,text:d.intencional},{id:'atajo',label:c.onboarding.shortcut,text:d.atajo}]; app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act2)} · ${state.act2.focusIdx+1}/3</p><h1>${esc(c.onboarding.focusTitle)}</h1><h2>${esc(d.label)}</h2><p class="lead">${esc(c.onboarding.focusIntro)}</p><div class="options">${choices.map(x=>option({id:x.id,text:`${x.label}: ${x.text}`},state.act2.enfoque[id]===x.id,'focus-choice',`data-id="${x.id}"`)).join('')}</div><div class="action-bar">${primary(c.ui.continue,'focus-next',!state.act2.enfoque[id])}</div>`); }
+  function renderReveal() { const c=C(), shortcuts=Object.entries(state.act2.enfoque).filter(([,v])=>v==='atajo').map(([id])=>byId(c.DIMENSIONS,id)); const neglected=byId(c.DIMENSIONS,state.act2.neglected); app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act2)}</p><h1>${esc(c.onboarding.revealTitle)}</h1><p class="lead">${esc(c.onboarding.revealIntro)}</p><div class="lesson-list">${shortcuts.length?shortcuts.map(d=>`<article class="lesson"><h2>${esc(d.label)}</h2><p>${esc(d.mensaje)}</p></article>`).join(''):'<p class="rule">No registrasteis atajos en los enfoques elegidos.</p>'}</div><p class="rule"><b>${esc(c.onboarding.neglected)}:</b> ${esc(neglected?.label||'')}</p><div class="action-bar">${primary(c.ui.world,'world')}</div>`); }
+  function renderShadow() { const c=C(), x=activeCandidate(), candidates=x.shadows.filter(s=>c.SHADOW_MAP[state.act2.neglected]?.includes(s)); app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act3)}</p><h1>${esc(c.shadows.title)}</h1><p class="lead">${esc(c.shadows.intro)}</p><div class="options">${candidates.map(s=>option({id:s,text:s},false,'shadow',`data-id="${s}"`)).join('')}</div>`); }
+  function renderCase() { const c=C(), item=c.CHALLENGES[state.act3.shadow], wait=deliberationLeft(); if (!item) { endAct3(); return; } app.innerHTML=shell(`<p class="eyebrow">${esc(c.acts.act3)}</p><h1>${esc(c.case.title)}</h1><p class="lead">${esc(replace(c.case.intro,{name:item.prot}))}</p><h2>${esc(item.esc)}</h2><div class="options case-options">${item.opts.map(o=>option(o,state.act3.choice===o.id,'case-choice',`data-id="${o.id}"`)).join('')}</div><div class="action-bar"><p class="helper">${wait?esc(c.ui.deliberate):''}</p>${primary(wait?`${c.ui.register} (${wait}s)`:c.ui.register,'finish',!state.act3.choice||wait>0,'data-deliberation')}</div>`,true); }
+  function renderClose() { const c=C(), x=activeCandidate(), d=byId(c.DIMENSIONS,state.act2.neglected); const sync=state.pendingSync?c.ui.syncPending:state.lastSyncAt?c.ui.syncDone:''; app.innerHTML=shell(`<p class="eyebrow">${esc(c.close.title)}</p><h1>${esc(c.close.motto)}</h1><div class="summary"><p><span>${esc(c.close.team)}</span><strong>${esc(state.alias)}</strong></p><p><span>${esc(c.close.candidate)}</span><strong>${esc(x?.name||c.ui.noAnswer)}</strong></p><p><span>${esc(c.close.neglected)}</span><strong>${esc(d?.label||c.ui.noAnswer)}</strong></p><p><span>${esc(c.close.decision)}</span><strong>${esc(state.act3.choice||c.ui.noAnswer)}</strong></p></div><p class="sync-status">${esc(sync)}</p><div class="button-stack">${primary(c.ui.sync,'sync')}${primary(c.ui.export,'export')}${primary(c.ui.restart,'restart')}</div>`); }
+  function renderResume() { const c=C(); app.insertAdjacentHTML('beforeend',`<div class="modal-backdrop"><section class="resume-modal" role="dialog" aria-modal="true"><h1>Partida guardada</h1><p>Hay una partida sin terminar en este dispositivo.</p>${primary(c.ui.resume,'resume')}${primary(c.ui.restart,'restart')}</section></div>`); }
+  function render() { ({lang:renderLang,welcome:renderWelcome,req:renderReq,priorities:renderPriorities,puzzle:renderPuzzle,candidates:renderCandidates,act2diag:renderDiag,ranking:renderRanking,enfoque:renderFocus,reveal:renderReveal,routeShadow:renderShadow,case:renderCase,close:renderClose}[state.screen] || renderLang)(); if(showResume) renderResume(); ensureClock(); }
+  function ensureClock() { const ticking=Boolean(state.activeAct)||deliberationLeft()>0; if(!ticking){clearInterval(timerId);timerId=null;return;} if(timerId!==null)return; timerId=setInterval(()=>{handleTimeout();const t=app.querySelector('[data-timer]');if(t)t.textContent=fmt(left());const b=app.querySelector('[data-deliberation]');if(b){const n=deliberationLeft();const ready=b.dataset.action==='req-confirm'?state.act1.selected.length>=CONFIG.numPriorities:b.dataset.action==='hire'?Boolean(state.act1.candidate):Boolean(state.act3.choice);b.textContent=n?`${b.dataset.label} (${n}s)`:b.dataset.label;b.disabled=n>0||!ready;}if(!state.activeAct&&!deliberationLeft()){clearInterval(timerId);timerId=null;}},500); }
 
-  function renderLanguage() {
-    const content = CONTENT_ES;
-    app.innerHTML = `<div class="app-shell intro"><section class="screen intro-screen"><p class="brand large"><img class="brand-mark" src="icono_pandora.webp" alt="Pandora" /><span>Full <i>Bloom</i></span></p><p class="tagline">${esc(CONFIG.tagline.es)}</p><h1>${esc(content.ui.language)}</h1><div class="language-actions"><button class="language-button" data-action="language-es">Español <small>(LATAM)</small></button><button class="language-button" data-action="language-pt">Português <small>(Brasil)</small></button></div></section><footer class="welcome-credit">© 2026, Danwar77 <a href="https://danwar77.github.io/hologram-web/#galeria" target="_blank" rel="noreferrer" aria-label="Galería holográfica de Danwar77"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.5c-2.23.49-2.7-.95-2.7-.95-.36-.93-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.81.06 1.23.83 1.23.83.72 1.23 1.88.88 2.34.67.07-.52.28-.88.51-1.08-1.78-.2-3.65-.89-3.65-3.96 0-.88.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82A7.66 7.66 0 0 1 8 1.87c.68 0 1.36.09 2 .27 1.53-1.03 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.08-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 8 0Z" /></svg><span>GitHub</span></a></footer></div>`;
-  }
-  function renderWelcome() {
-    const c = C();
-    app.innerHTML = shell(`<p class="eyebrow">${esc(c.welcome.eyebrow)}</p><h1>${esc(c.welcome.title)}</h1><p class="lead">${esc(c.welcome.premise)}</p><p class="rule">${esc(c.welcome.rules)}</p><label class="field"><span>${esc(c.welcome.aliasLabel)}</span><input id="team-alias" maxlength="30" autocomplete="off" value="${esc(state.teamAlias)}" aria-describedby="alias-help" /><small id="alias-help">${esc(c.welcome.aliasHelp)}</small></label><div class="action-bar">${primary(c.welcome.start, 'start', !state.teamAlias.trim())}</div>`);
-  }
-  function renderAct1() {
-    const c = C(); const selected = state.act1.chosen; const left = deliberationLeft();
-    const cards = c.characteristics.map((item) => {
-      const active = selected.includes(item.id); const blocked = selected.length >= CONFIG.choose && !active;
-      return `<article class="trait ${active ? 'selected' : ''}"><button data-action="trait" data-id="${item.id}" aria-pressed="${active}" ${blocked ? 'disabled' : ''}><span class="trait-index">${active ? 'Seleccionada' : item.familia}</span><strong>${esc(item.name)}</strong><span>${esc(item.caraA)}</span></button><details><summary>Ver cara B</summary><p>${esc(item.caraB)}</p></details></article>`;
-    }).join('');
-    const label = left ? `${c.ui.confirm} (${left}s)` : c.ui.confirm;
-    app.innerHTML = shell(`<p class="eyebrow">Acto 1 · La selección</p><h1>${esc(c.ui.choose)} ${CONFIG.choose}</h1><p class="selection-count" aria-live="polite">${selected.length}/${CONFIG.choose} ${esc(c.ui.selected)}</p><div class="trait-grid">${cards}</div><div class="action-bar"><p class="helper">${left ? 'Deliberad antes de registrar vuestra selección.' : c.ui.incomplete}</p>${primary(label, 'confirm-act1', selected.length !== CONFIG.choose || left > 0, `data-deliberation-button data-base-label="${esc(c.ui.confirm)}"`)}</div>`);
-  }
-  function renderAct1Reveal() {
-    const c = C(); const result = resolveAct1(); const traits = selectedCharacteristics();
-    const traitsHtml = traits.length ? traits.map((item) => `<li><strong>${esc(item.name)}</strong><span>${esc(item.caraA)}</span><small>${esc(item.caraB)}</small></li>`).join('') : `<li>${esc(c.ui.noSelection)}</li>`;
-    app.innerHTML = shell(`<p class="eyebrow">${esc(c.ui.reveal)}</p><p class="flower-mark" aria-hidden="true">✦</p><h1>${esc(result.archetype.name)}</h1><p class="birthday">${esc(result.archetype.birthday)}</p><p class="lead">${esc(result.archetype.blurb)}</p><h2>Las facetas elegidas</h2><ul class="trait-summary">${traitsHtml}</ul><div class="action-bar">${primary(c.ui.continue, 'start-act2')}</div>`);
-  }
-  function renderRadar() {
-    const c = C(); const sections = c.radar.axes.map((axis) => radarCases(axis).map((caseItem) => `<article class="radar-case"><p class="axis-label">${esc(axis.label)}</p><h2>${esc(caseItem.escena)}</h2><p class="thinking"><b>${esc(c.ui.thinking)}</b> ${esc(caseItem.pensando)}</p><div class="options">${caseItem.options.map((option) => `<button class="option ${state.act2.choices[caseItem.id] === option.id ? 'selected' : ''}" data-action="radar-choice" data-case="${caseItem.id}" data-option="${option.id}" aria-pressed="${state.act2.choices[caseItem.id] === option.id}"><b>${option.id}</b><span>${esc(option.text)}</span></button>`).join('')}</div></article>`).join('')).join('');
-    const allCases = c.radar.axes.flatMap(radarCases); const complete = allCases.every((item) => state.act2.choices[item.id]);
-    app.innerHTML = shell(`<p class="eyebrow">Acto 2 · ${esc(c.ui.radar)}</p><h1>Cuatro ejes para acompañar</h1><p class="lead">Conversad con las cartas y registrad una decisión por escena.</p><div class="radar-list">${sections}</div><div class="action-bar">${primary(c.ui.continue, 'complete-radar', !complete)}</div>`);
-  }
-  function renderTrapReveal() {
-    const c = C(); const lessons = c.radar.axes.map((axis) => radarCases(axis).map((caseItem) => `<article class="lesson"><p class="axis-label">${esc(axis.label)}</p><h2>${esc(caseItem.trampa)}</h2><p>${esc(caseItem.mensaje)}</p></article>`).join('')).join('');
-    app.innerHTML = shell(`<p class="eyebrow">${esc(c.ui.reveal)}</p><h1>Lo que conviene vigilar</h1><div class="lesson-list">${lessons}</div><p class="rule">${esc(c.ui.radarSheet)}</p><div class="action-bar">${primary(c.ui.continue, 'start-act3')}</div>`);
-  }
-  function renderAct3() {
-    const c = C(); const item = resolveChallenge(); state.act3.challengeId = item.id; const left = deliberationLeft();
-    const label = left ? `${c.ui.register} (${left}s)` : c.ui.register;
-    app.innerHTML = shell(`<p class="eyebrow">Acto 3 · El caso</p><p class="axis-label">${esc(item.title)}</p><h1>${esc(item.escena)}</h1><div class="options case-options">${item.options.map((option) => `<button class="option ${state.act3.choice === option.id ? 'selected' : ''}" data-action="case-choice" data-option="${option.id}" aria-pressed="${state.act3.choice === option.id}"><b>${option.id}</b><span>${esc(option.text)}</span></button>`).join('')}</div><div class="action-bar">${primary(label, 'finish', !state.act3.choice || left > 0, `data-deliberation-button data-base-label="${esc(c.ui.register)}"`)}</div>`, { dark: true });
-  }
-  function renderClose() {
-    const c = C(); const archetype = resolveAct1().archetype; const challenge = resolveChallenge();
-    const status = state.pendingSync ? c.ui.syncPending : state.lastSyncAt ? c.ui.syncDone : '';
-    app.innerHTML = shell(`<p class="eyebrow">${esc(c.ui.close)}</p><p class="flower-mark" aria-hidden="true">✦</p><h1>${esc(c.ui.built)}</h1><div class="summary"><p><span>Equipo</span><strong>${esc(state.teamAlias)}</strong></p><p><span>Asociada</span><strong>${esc(archetype.name)}</strong></p><p><span>Caso</span><strong>${esc(challenge.title)}</strong></p><p><span>Decisión</span><strong>${esc(state.act3.choice || c.ui.noAnswer)}</strong></p></div><p class="sync-status" role="status">${esc(status)}</p><div class="button-stack">${secondary(c.ui.sync, 'sync')}${secondary(c.ui.export, 'export')}${secondary(c.ui.restart, 'restart')}</div>`);
-  }
-  function renderResume() {
-    const c = C();
-    app.insertAdjacentHTML('beforeend', `<div class="modal-backdrop"><section class="resume-modal" role="dialog" aria-modal="true" aria-labelledby="resume-title"><p class="eyebrow">Full Bloom</p><h1 id="resume-title">${esc(c.ui.resumed)}</h1><p>Hay una partida guardada en este dispositivo.</p>${primary(c.ui.resume, 'resume')}${secondary(c.ui.restart, 'restart')}</section></div>`);
-  }
-  function updateTemporalUi() {
-    const timer = app.querySelector('[data-timer-value]');
-    if (timer) timer.textContent = fmt(secondsLeft());
-
-    const deliberationButton = app.querySelector('[data-deliberation-button]');
-    if (!deliberationButton) return;
-    const left = deliberationLeft();
-    deliberationButton.textContent = left ? `${deliberationButton.dataset.baseLabel} (${left}s)` : deliberationButton.dataset.baseLabel;
-    const selectionReady = deliberationButton.dataset.action === 'confirm-act1'
-      ? state.act1.chosen.length === CONFIG.choose
-      : Boolean(state.act3.choice);
-    deliberationButton.disabled = left > 0 || !selectionReady;
-  }
-  function hasActiveClock() { return Boolean(state.activeAct) || deliberationLeft() > 0; }
-  function ensureClock() {
-    if (!hasActiveClock()) {
-      clearInterval(timerId); timerId = null;
-      return;
-    }
-    updateTemporalUi();
-    if (timerId !== null) return;
-    timerId = window.setInterval(() => {
-      handleTimeout();
-      updateTemporalUi();
-      if (!hasActiveClock()) { clearInterval(timerId); timerId = null; }
-    }, 250);
-  }
-  function render() {
-    if (state.screen === 'lang') renderLanguage();
-    else if (state.screen === 'welcome') renderWelcome();
-    else if (state.screen === 'act1_select') renderAct1();
-    else if (state.screen === 'act1_reveal') renderAct1Reveal();
-    else if (state.screen === 'act2_radar') renderRadar();
-    else if (state.screen === 'trap_reveal') renderTrapReveal();
-    else if (state.screen === 'act3_case') renderAct3();
-    else renderClose();
-    if (showResume) renderResume();
-    ensureClock();
-  }
-
-  app.addEventListener('input', (event) => {
-    if (event.target.id === 'team-alias') {
-      state.teamAlias = event.target.value.slice(0, 30); save();
-      const start = app.querySelector('[data-action="start"]');
-      if (start) start.disabled = !state.teamAlias.trim();
-    }
+  app.addEventListener('input', e=>{if(e.target.id==='team-alias'){state.alias=e.target.value.slice(0,30);save();const b=app.querySelector('[data-action="start"]');if(b)b.disabled=!state.alias.trim();}});
+  app.addEventListener('click', e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;const a=b.dataset.action,c=C();
+    if(a==='lang'){state.lang=b.dataset.lang;go('welcome');}
+    else if(a==='start'){state.startedAt=new Date().toISOString();startAct('act1','req');}
+    else if(a==='req-toggle'){const id=b.dataset.id;state.act1.selected=state.act1.selected.includes(id)?state.act1.selected.filter(x=>x!==id):[...state.act1.selected,id];save();render();}
+    else if(a==='req-confirm'){go('priorities');}
+    else if(a==='priority'){const id=b.dataset.id,n=state.act1.priorities.indexOf(id);if(n>=0)state.act1.priorities.splice(n,1);else if(state.act1.priorities.length<CONFIG.numPriorities)state.act1.priorities.push(id);save();render();}
+    else if(a==='interview'){go('puzzle');}
+    else if(a==='puzzle-choice'){const id=b.dataset.id,key=state.act1.priorities[state.act1.puzzleIdx],multi=b.dataset.multi==='true',old=state.act1.puzzleSelection[key]||[];state.act1.puzzleSelection[key]=multi?(old.includes(id)?old.filter(x=>x!==id):[...old,id]):[id];state.act1.feedback[key]=null;save();render();}
+    else if(a==='puzzle-check'){const key=state.act1.priorities[state.act1.puzzleIdx],p=c.PUZZLES[key],order=puzzleOptions(key,p),choice=state.act1.puzzleSelection[key]||[],correct=order.filter(x=>x.correct).map(x=>x.id);let msg=null,ok=false;if(p.multi){const weak=choice.some(id=>order.find(x=>x.id===id)?.why);ok=!weak&&choice.length===correct.length&&correct.every(id=>choice.includes(id));msg=weak?c.interview.weak:ok?c.interview.success:c.interview.missing;}else{const x=order.find(o=>o.id===choice[0]);ok=Boolean(x?.correct);msg=ok?c.interview.success:(x?.near||x?.why||c.interview.weak);}if(!ok)state.act1.puzzleErrors[key]=(state.act1.puzzleErrors[key]||0)+1;state.act1.feedback[key]={ok,text:msg};save();render();}
+    else if(a==='puzzle-next'){state.act1.puzzleIdx++;if(state.act1.puzzleIdx>=state.act1.priorities.length)endAct1();else{save();render();}}
+    else if(a==='candidate'){state.act1.candidate=b.dataset.id;state.deliberationStartedAt=Date.now();save();render();}
+    else if(a==='hire'){state.activeAct=null;state.actDeadline=null;state.deliberationStartedAt=null;go('act2diag');checkpoint();}
+    else if(a==='start-act2'){startAct('act2','ranking');}
+    else if(a==='rank'){const id=b.dataset.id,n=state.act2.ranking.indexOf(id);if(n>=0)state.act2.ranking.splice(n,1);else if(state.act2.ranking.length<c.DIMENSIONS.length)state.act2.ranking.push(id);save();render();}
+    else if(a==='focus'){state.act2.neglected=state.act2.ranking.at(-1);state.act2.focusIdx=0;go('enfoque');}
+    else if(a==='focus-choice'){state.act2.enfoque[state.act2.ranking[state.act2.focusIdx]]=b.dataset.id;save();render();}
+    else if(a==='focus-next'){state.act2.focusIdx++;if(state.act2.focusIdx>=3)endAct2();else{save();render();}}
+    else if(a==='world'){const x=activeCandidate(),matches=x.shadows.filter(s=>c.SHADOW_MAP[state.act2.neglected]?.includes(s));if(matches.length===1){state.act3.shadow=matches[0];startAct('act3','case');}else if(!matches.length){state.act3.shadow=x.shadows[0];startAct('act3','case');}else{startAct('act3','routeShadow');}}
+    else if(a==='shadow'){state.act3.shadow=b.dataset.id;state.deliberationStartedAt=Date.now();go('case');}
+    else if(a==='case-choice'){state.act3.choice=b.dataset.id;save();render();}
+    else if(a==='finish'){endAct3();}
+    else if(a==='sync'){state.pendingSync=true;save();syncToSheet();render();}
+    else if(a==='export')exportRecord(); else if(a==='restart')reset(); else if(a==='resume'){showResume=false;render();}
   });
-  app.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-action]'); if (!button || button.disabled) return;
-    const action = button.dataset.action;
-    if (action.startsWith('language-')) { state.lang = action.slice(-2); state.screen = 'welcome'; save(); render(); }
-    else if (action === 'start') { state.startedAt = new Date().toISOString(); startAct('act1', 'act1_select'); }
-    else if (action === 'trait') { const id = button.dataset.id; const has = state.act1.chosen.includes(id); state.act1.chosen = has ? state.act1.chosen.filter((item) => item !== id) : [...state.act1.chosen, id]; save(); render(); }
-    else if (action === 'confirm-act1') confirmAct1();
-    else if (action === 'start-act2') { prepareRadar(); startAct('act2', 'act2_radar'); }
-    else if (action === 'radar-choice') { state.act2.choices[button.dataset.case] = button.dataset.option; save(); render(); }
-    else if (action === 'complete-radar') completeRadar();
-    else if (action === 'start-act3') { startAct('act3', 'act3_case'); state.deliberationStartedAt = Date.now(); save(); render(); }
-    else if (action === 'case-choice') { state.act3.choice = button.dataset.option; save(); render(); }
-    else if (action === 'finish') finishGame();
-    else if (action === 'sync') { state.pendingSync = true; save(); syncToSheet(); render(); }
-    else if (action === 'export') exportRecord();
-    else if (action === 'restart') reset();
-    else if (action === 'resume') { showResume = false; render(); }
-  });
-  window.addEventListener('online', () => { syncToSheet(); render(); });
-  window.addEventListener('offline', render);
-  window.addEventListener('popstate', () => { history.pushState({ fullBloom: true }, '', location.href); render(); });
-  history.replaceState({ fullBloom: true }, '', location.href);
-  render();
+  window.addEventListener('online',()=>{syncToSheet();render();}); window.addEventListener('offline',render);
+  window.addEventListener('popstate',()=>{history.pushState({fullBloom:true},'',location.href);render();}); history.replaceState({fullBloom:true},'',location.href); render();
 })();
