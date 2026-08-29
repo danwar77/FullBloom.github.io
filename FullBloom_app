@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Full Bloom · Store Manager Conference 2026</title>
+<style>
+  :root{
+    --bg:#1B1420; --bg2:#241826; --surface:#2A1F31; --surface-2:#33253D; --line:#4A3852;
+    --ink:#F3ECEF; --ink-soft:#CBBAC6; --ink-mute:#9C8898;
+    --rose:#E0729B; --rose-soft:#F0AEC8; --rose-tint:#3A2130;
+    --gold:#D9B45E; --gold-soft:#ECD59A; --green:#7FD1A6;
+    --radius:16px; --tap:52px;
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{background:radial-gradient(120% 90% at 50% -10%, #2A1B2E 0%, var(--bg) 55%, var(--bg2) 100%);
+    color:var(--ink); font-family:var(--sans); font-size:17px; line-height:1.5; -webkit-font-smoothing:antialiased; min-height:100dvh;}
+  #app{max-width:560px; margin:0 auto; min-height:100dvh;}
+  .screen{padding:16px 20px 130px; animation:rise .3s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){.screen{animation:none;} *{transition:none!important;}}
+  .top{display:flex; align-items:center; gap:10px; padding:12px 20px 0; max-width:560px; margin:0 auto; width:100%;}
+  .top .name{font-family:var(--serif); font-weight:700; font-size:16px;}
+  .top .name b{color:var(--rose-soft);}
+  .timer{margin-left:auto; font-variant-numeric:tabular-nums; font-weight:700; font-size:15px; color:var(--gold-soft);
+    background:rgba(217,180,94,.12); border:1px solid rgba(217,180,94,.35); border-radius:999px; padding:3px 12px;}
+  .timer.hidden{display:none;}
+  .eyebrow{font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--rose-soft); font-weight:600; margin:0 0 8px;}
+  h1{font-family:var(--serif); font-weight:700; font-size:27px; line-height:1.15; margin:0 0 12px;}
+  h2{font-family:var(--serif); font-weight:700; font-size:21px; margin:0 0 6px;}
+  p.lead{color:var(--ink-soft); margin:0 0 14px;}
+  .muted{color:var(--ink-mute); font-size:14px;}
+  .count{text-align:center; font-size:13px; color:var(--ink-mute); margin-top:8px;}
+  .grid{display:flex; flex-direction:column; gap:10px; margin:4px 0 8px;}
+  .blocklabel{font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--gold-soft); font-weight:600; margin:14px 0 4px;}
+  .opt{display:flex; align-items:flex-start; gap:12px; width:100%; text-align:left; background:var(--surface);
+    border:1.5px solid var(--line); color:var(--ink); border-radius:14px; padding:13px 14px; min-height:var(--tap);
+    font-size:15.5px; font-family:var(--sans); cursor:pointer; transition:border-color .16s, background .16s, transform .06s;}
+  .opt:active{transform:scale(.99);}
+  .opt .box{width:23px; height:23px; border-radius:7px; border:2px solid var(--line); flex:0 0 auto; margin-top:1px; display:flex; align-items:center; justify-content:center;}
+  .opt.sel{border-color:var(--gold); background:linear-gradient(180deg, rgba(224,114,155,.16), rgba(224,114,155,.05));}
+  .opt.sel .box{border-color:var(--gold); background:var(--gold);}
+  .opt.sel .box::after{content:"✓"; color:#241a05; font-size:14px; font-weight:800;}
+  .opt.disabled{opacity:.35; pointer-events:none;}
+  .opt.bad{border-color:#c96a6a; background:rgba(201,106,106,.12);}
+  .opt.good{border-color:var(--green); background:rgba(127,209,166,.14);}
+  .opt .letter{width:25px;height:25px;flex:0 0 auto;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--rose-soft);margin-top:1px;}
+  .opt .rank{width:25px;height:25px;flex:0 0 auto;border-radius:50%;background:var(--gold);color:#241a05;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;margin-top:1px;}
+  .opt .txt{flex:1;}
+  .opt .sub{display:block; color:var(--ink-mute); font-size:12.5px; margin-top:3px;}
+  .cta-wrap{position:fixed; left:0; right:0; bottom:0; padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg, rgba(27,20,32,0), var(--bg) 42%);}
+  .cta-inner{max-width:560px; margin:0 auto;}
+  button.cta{width:100%; min-height:var(--tap); border:none; border-radius:14px; font-size:17px; font-weight:700;
+    font-family:var(--sans); cursor:pointer; background:var(--gold); color:#241a05; transition:opacity .2s, transform .06s;}
+  button.cta:active{transform:scale(.99);}
+  button.cta:disabled{background:var(--surface-2); color:var(--ink-mute); cursor:not-allowed;}
+  button.ghost{background:transparent; color:var(--ink-soft); border:1.5px solid var(--line);}
+  input.alias{width:100%; background:var(--surface); border:1.5px solid var(--line); color:var(--ink); border-radius:14px;
+    padding:15px; font-size:17px; font-family:var(--sans); min-height:var(--tap);}
+  input.alias:focus{outline:none; border-color:var(--rose);}
+  .block{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:11px;}
+  .role{font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; margin-bottom:3px;}
+  .roleA{color:var(--rose-soft);} .roleB{color:var(--gold-soft);} .roleG{color:var(--green);}
+  .think{background:var(--rose-tint); border:1px solid rgba(224,114,155,.3); border-radius:12px; padding:11px 13px; margin:12px 0;}
+  .think .lbl{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--rose-soft); font-weight:600; margin-bottom:3px;}
+  .think .q{font-family:var(--serif); font-style:italic; font-size:16px;}
+  .persona .nm{font-family:var(--serif); font-size:24px; font-weight:700;}
+  .persona .bd{color:var(--gold-soft); font-size:13px; margin-bottom:8px;}
+  .chk{display:flex; gap:9px; align-items:flex-start; margin:5px 0; font-size:14.5px;}
+  .chk .b{font-weight:800; font-size:15px;}
+  .chk .yes{color:var(--green);} .chk .no{color:var(--ink-mute);}
+  .chk.no span{color:var(--ink-mute);}
+  .hero{display:flex; justify-content:center; margin:10px 0 14px;}
+  .quote{font-family:var(--serif); font-style:italic; font-size:18px; line-height:1.4; color:var(--gold-soft);
+    border-left:3px solid var(--gold); padding:2px 0 2px 15px; margin:14px 0;}
+  .center{text-align:center;} .hr{height:1px;background:var(--line);border:0;margin:16px 0;}
+  .pill{display:inline-block; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:#241a05; background:var(--gold);
+    border-radius:999px; padding:2px 9px; font-weight:700; margin-left:6px;}
+  .stepdots{display:flex;gap:6px;justify-content:center;margin-bottom:8px;}
+  .stepdots i{width:7px;height:7px;border-radius:50%;background:var(--line);}
+  .stepdots i.on{background:var(--rose);}
+  .hint{background:rgba(217,180,94,.1); border:1px solid rgba(217,180,94,.3); border-radius:12px; padding:10px 13px; margin:10px 0; font-size:14px; color:var(--gold-soft);}
+  .fb{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin:8px 0; font-size:14px;}
+  .fb .w{color:#e39a9a; font-weight:700;}
+</style>
+</head>
+<body>
+<div class="top" id="top" style="visibility:hidden">
+  <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#E0729B" stroke-width="1.4">
+    <path d="M12 12c0-3 1.5-5 0-8-1.5 3 0 5 0 8Z"/><path d="M12 12c0-3-1.5-5 0-8" transform="rotate(72 12 12)"/>
+    <path d="M12 12c0-3-1.5-5 0-8" transform="rotate(144 12 12)"/><path d="M12 12c0-3-1.5-5 0-8" transform="rotate(216 12 12)"/>
+    <path d="M12 12c0-3-1.5-5 0-8" transform="rotate(288 12 12)"/></g><circle cx="12" cy="12" r="2.1" fill="#D9B45E"/></svg>
+  <span class="name">Full <b>Bloom</b></span>
+  <span class="timer hidden" id="timer">15:00</span>
+</div>
+<div id="app"><div class="screen"></div></div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = {
+  tagline:"Hacer Florecer el Talento a través del Liderazgo",
+  durationLabel:"XX",       // duración máxima del juego en minutos (pendiente de calibrar)
+  numPriorities:3,          // competencias prioritarias del Acto 1 -> puzzles
+  timers:{ act1:1500, act2:900, act3:900 },     // seg (Acto 1 más largo)
+  deliberationMin:{ req:15, candidate:15, act3case:15 },  // conferencia: 60/45
+  sheetEndpoint:""
+};
+
+/* ===================== CONTENIDO ===================== */
+const REQS=["Atención al cliente y storytelling","Cierre y orientación a resultados","Venta cruzada y upselling",
+ "Orientación al cliente / experiencia memorable","Comunicación efectiva","Trabajo en equipo",
+ "Adaptabilidad y flexibilidad","Manejo de caja y procesos operativos","Experiencia previa en retail o joyería"];
+
+const POOL=[
+ {id:"atencion",block:"Excelencia Comercial",w:4,name:"Atención al cliente y storytelling"},
+ {id:"cierre",block:"Excelencia Comercial",w:3,name:"Cierre y orientación a resultados"},
+ {id:"cruzada",block:"Excelencia Comercial",w:4,name:"Venta cruzada y upselling"},
+ {id:"producto",block:"Excelencia Comercial",w:3,name:"Conocimiento de producto y colecciones"},
+ {id:"negocio",block:"Excelencia Comercial",w:3,name:"Entendimiento del negocio y KPIs"},
+ {id:"procesos",block:"Excelencia Operativa",w:3,name:"Ejecución de procesos de tienda"},
+ {id:"caja",block:"Excelencia Operativa",w:3,name:"Manejo de caja y transacciones"},
+ {id:"visual",block:"Excelencia Operativa",w:2,name:"Visual merchandising"},
+ {id:"sistemas",block:"Excelencia Operativa",w:2,name:"Uso de sistemas y POS"},
+ {id:"organizacion",block:"Excelencia Operativa",w:3,name:"Organización y gestión del tiempo"},
+ {id:"estandares",block:"Excelencia Operativa",w:3,name:"Cumplimiento de estándares y políticas"},
+ {id:"mercancia",block:"Excelencia Operativa",w:3,name:"Cuidado de mercancía / prevención de pérdidas"},
+ {id:"orientacion",block:"Excelencia con las Personas",w:4,name:"Orientación al cliente / experiencia memorable"},
+ {id:"equipo",block:"Excelencia con las Personas",w:4,name:"Trabajo en equipo"},
+ {id:"comunicacion",block:"Excelencia con las Personas",w:4,name:"Comunicación efectiva"},
+ {id:"apoyo",block:"Excelencia con las Personas",w:3,name:"Apoyo a nuevos integrantes"},
+ {id:"marca",block:"Actitud y Comportamiento",w:4,name:"Promueve la marca y vive los valores"},
+ {id:"adaptabilidad",block:"Actitud y Comportamiento",w:3,name:"Adaptabilidad y flexibilidad"},
+ {id:"desarrollo",block:"Actitud y Comportamiento",w:3,name:"Desarrollo propio y aprendizaje continuo"},
+ {id:"integridad",block:"Actitud y Comportamiento",w:4,name:"Responsabilidad, confiabilidad e integridad"},
+ {id:"entorno",block:"Actitud y Comportamiento",w:2,name:"Conciencia del entorno"},
+ // Requisitos y experiencia — con los distractores (dist:true, peso 0) intercalados para que no canten
+ {id:"experiencia",block:"Requisitos y Experiencia",w:2,name:"Experiencia previa en retail o joyería"},
+ {id:"d_moda",block:"Requisitos y Experiencia",w:0,dist:true,name:"Conocimiento de moda y tendencias"},
+ {id:"educativo",block:"Requisitos y Experiencia",w:1,name:"Nivel educativo (preparatoria)"},
+ {id:"d_idiomas",block:"Requisitos y Experiencia",w:0,dist:true,name:"Dominio de idiomas extranjeros (inglés avanzado)"},
+ {id:"office",block:"Requisitos y Experiencia",w:1,name:"Office / Excel básico"},
+ {id:"d_ppt",block:"Requisitos y Experiencia",w:0,dist:true,name:"Diseño de presentaciones (PowerPoint)"},
+ {id:"disponibilidad",block:"Requisitos y Experiencia",w:3,name:"Disponibilidad y movilidad"},
+ {id:"d_foto",block:"Requisitos y Experiencia",w:0,dist:true,name:"Fotografía de producto y contenido para redes"},
+ {id:"d_moda2",block:"Requisitos y Experiencia",w:0,dist:true,name:"Creatividad para escaparates y campañas propias"},
+ {id:"d_publico",block:"Requisitos y Experiencia",w:0,dist:true,name:"Hablar en público / oratoria"},
+ {id:"d_reparacion",block:"Requisitos y Experiencia",w:0,dist:true,name:"Reparación y arreglo de joyas"},
+ {id:"d_gemologia",block:"Requisitos y Experiencia",w:0,dist:true,name:"Gemología y certificación de piedras"}
+];
+
+// Puzzles de entrevista: la que detecta (good) + 3 para descartar (weak)
+const PUZZLES={
+ atencion:{good:"Cuéntame la última venta en la que usaste la historia de una pieza para conectar con un cliente. ¿Cómo reaccionó?",
+  weak:[["¿Te consideras bueno/a contando la historia de un producto?","Se responde con un sí; no aporta evidencia."],
+        ["¿Cómo usarías el storytelling para vender una pieza cara?","Mide lo que imagina, no lo que ha hecho."],
+        ["¿Qué colecciones conoces mejor?","Detecta conocimiento de producto, no storytelling."]]},
+ cruzada:{options:[
+   {text:"Cuéntame cómo fue la última vez que un cliente quería una sola pieza y conseguiste que se llevase algo más. ¿Cómo lo lograste?",correct:true},
+   {text:"¿Sueles ofrecer productos complementarios, verdad?",why:"La pregunta ya dicta la respuesta deseada."},
+   {text:"Si un cliente compra un anillo, ¿qué le ofrecerías?",why:"Mide criterio teórico, no práctica real."},
+   {text:"¿Sueles cumplir tu UPT?",why:"Es un KPI; no revela la conducta detrás."},
+   {text:"¿Cómo sueles hacer tu ceremonia de ventas para alcanzar tus objetivos?",near:"Esta es muy buena pregunta, pero hay otra un poco más específica."}]},
+ orientacion:{good:"Cuéntame de un cliente que volviera a buscarte a ti. ¿Qué hiciste para que pasara?",
+  weak:[["¿Qué es para ti un buen servicio al cliente?","Pide una definición; se recita sin haberlo dado."],
+        ["¿Qué harías si un cliente se va sin comprar?","Mide una reacción imaginada."],
+        ["¿Cómo resuelves una reclamación difícil?","Apunta a gestión de conflictos, no a fidelizar."]]},
+ equipo:{good:"Cuéntame una situación en la que el equipo estaba desbordado y cómo te coordinaste con los demás.",
+  weak:[["¿Te consideras una persona de equipo?","Nadie dice que no; sin evidencia."],
+        ["¿Te adaptas bien a trabajar con otros, verdad?","La pregunta induce el sí."],
+        ["¿Cómo te llevas con tu Store Manager?","Mide la relación con el líder, no la horizontal."]]},
+ comunicacion:{options:[
+   {text:"Cuéntame una vez que tuviste que dar una información incómoda a un cliente o compañero. ¿Cómo lo dijiste?",correct:true},
+   {text:"¿Se te da bien comunicar?",why:"Autoevaluación sin evidencia."},
+   {text:"¿Qué es para ti una buena comunicación?",why:"Pide teoría, no demuestra."},
+   {text:"En ocasiones nos encontramos con situaciones difíciles, como un cliente enojado. Seguro que puedes contarme un ejemplo que te pasó y cómo te enfrentaste a esa situación.",why:"Suena conductual, pero detecta gestión del conflicto, no la comunicación en sí."},
+   {text:"Cuéntame una situación en la que tu comunicación fue efectiva, ¿qué sucedió y cómo lo resolviste?",why:"Le pides que elija un caso donde ya le fue bien: no revela cómo comunica cuando es difícil."}]},
+ marca:{multi:true, options:[
+   {text:"¿Qué te atrae de Pandora frente a otras marcas? ¿Hay algo concreto que te gusta de Pandora como marca para la que trabajar?",correct:true},
+   {text:"¿Qué valores te representan como profesional? ¿Cuáles son importantes para ti dentro de la cultura de la empresa o marca para sentirte feliz?",correct:true},
+   {text:"Nuestros valores son soñar, atreverse, cuidar y entregar, ¿te identificas?",why:"Le das los valores; solo asiente."},
+   {text:"¿Conoces la marca Pandora?",why:"Un sí/no; no distingue admiración de ubicación."},
+   {text:"¿Qué sabes de nuestras colecciones actuales?",why:"Mide producto, no compromiso con la marca."}]},
+ integridad:{good:"Cuéntame una vez que cometiste un error en caja o con producto. ¿Qué hiciste?",
+  weak:[["¿Te consideras una persona responsable y honesta?","Todos dicen que sí; no filtra."],
+        ["¿Qué harías si vieras a un compañero llevándose producto?","Mide la respuesta correcta que todos saben."],
+        ["¿Conoces los procesos de apertura y cierre?","Mide lo operativo, no la integridad."]]},
+ cierre:{good:"Cuéntame un mes en el que ibas por debajo de tu objetivo. ¿Qué hiciste para darle la vuelta?",
+  weak:[["¿Sueles cumplir tus objetivos de venta?","Un resultado sí/no; no revela cómo."],
+        ["¿Qué harías si vas retrasado en tus metas?","Respuesta imaginada."],
+        ["¿Conoces bien los KPIs de la tienda?","Mide entendimiento del negocio, no resultados."]]},
+ producto:{good:"Háblame de una pieza o colección que te encante y cómo se la presentarías a un cliente.",
+  weak:[["¿Conoces bien nuestro catálogo?","Sí/no sin evidencia."],
+        ["¿Cómo te mantendrías al día de los lanzamientos?","Mide intención, no hábito."],
+        ["Hay que saberse el producto al detalle, ¿tú te lo estudias, no?","Induce el sí."]]},
+ negocio:{good:"¿Qué indicadores mirabas en tu tienda y qué hacías tú, en el piso, para moverlos?",
+  weak:[["¿Sabes qué es la tasa de conversión?","Mide si conoce un término, no si lo usa."],
+        ["¿Sueles cumplir tus metas de venta?","Apunta a resultados, no a comprensión."],
+        ["¿Por qué crees que son importantes los KPIs?","Pide teoría sin evidencia de uso."]]},
+ procesos:{good:"Cuéntame cómo era tu rutina de apertura o cierre en tu tienda anterior, paso a paso.",
+  weak:[["¿Sabes hacer apertura y cierre?","Sí/no; no distingue dominio."],
+        ["¿Cómo organizarías la recepción de un pedido grande?","Mide imaginación, no experiencia."],
+        ["Los procesos aquí son estrictos, ¿tú eres ordenado, verdad?","Induce la respuesta."]]},
+ caja:{good:"Cuéntame la última vez que te cuadró (o no) la caja al cierre. ¿Qué pasó y qué hiciste?",
+  weak:[["¿Tienes experiencia manejando caja?","Sí/no; no revela el rigor."],
+        ["¿Qué harías si te falta dinero en caja?","La respuesta correcta que todos saben."],
+        ["¿Conoces el POS o Charmsys?","Mide sistemas, no el manejo de efectivo."]]},
+ organizacion:{good:"Cuéntame un día en el que tuviste demasiadas tareas a la vez. ¿Cómo decidiste el orden?",
+  weak:[["¿Te consideras una persona organizada?","Nadie dice que no."],
+        ["¿Cómo priorizarías tres cosas urgentes a la vez?","Criterio imaginado."],
+        ["Aquí hay mucho ritmo, ¿gestionas bien tu tiempo, no?","Induce el sí."]]},
+ estandares:{good:"Cuéntame de una norma o estándar que te costara cumplir y cómo lo llevaste.",
+  weak:[["¿Respetas siempre las políticas de la empresa?","Todos dicen que sí."],
+        ["¿Qué harías si un compañero se salta una norma?","Respuesta de manual."],
+        ["¿Conoces los protocolos de prevención de pérdidas?","Apunta al cuidado de mercancía."]]},
+ mercancia:{good:"Cuéntame una vez que detectaste una diferencia de inventario o un riesgo con el producto. ¿Qué hiciste?",
+  weak:[["¿Eres cuidadoso con el producto?","Sí/no sin evidencia."],
+        ["¿Qué harías si notas que falta mercancía?","La respuesta esperada."],
+        ["¿Sabes hacer inventarios en el sistema?","Mide sistemas, no la conducta de cuidado."]]},
+ apoyo:{good:"Cuéntame de alguien nuevo al que ayudaste a integrarse. ¿Qué hiciste concretamente?",
+  weak:[["¿Te gusta ayudar a los que llegan nuevos?","Un sí genérico."],
+        ["¿Cómo ayudarías a un compañero nuevo?","Mide lo que imagina."],
+        ["¿Te consideras buen compañero de equipo?","Trabajo en equipo general, no apoyo a nuevos."]]},
+ adaptabilidad:{good:"Cuéntame de un cambio inesperado en tu tienda y cómo lo llevaste.",
+  weak:[["¿Te adaptas bien a los cambios?","Nadie dice que no."],
+        ["Aquí cambia mucho, ¿tú eres flexible, verdad?","Induce el sí."],
+        ["¿Qué harías si cambian tu turno de un día para otro?","Reacción imaginada."]]},
+ desarrollo:{good:"Cuéntame algo que aprendiste por tu cuenta para mejorar en tu trabajo. ¿Qué te llevó a hacerlo?",
+  weak:[["¿Te gusta aprender cosas nuevas?","Un sí genérico."],
+        ["¿Cómo mejorarías tus habilidades de venta?","Mide intención."],
+        ["¿Asistes a todas las capacitaciones?","Mide asistencia, no iniciativa propia."]]},
+ disponibilidad:{good:"¿Cuál es tu disponibilidad real de horarios y fines de semana, y para moverte entre tiendas?",
+  weak:[["¿Tienes disponibilidad completa?","Un sí cómodo que no concreta."],
+        ["Necesitamos gente flexible, ¿no hay problema, verdad?","Induce el sí y tapa restricciones."],
+        ["¿Estarías dispuesto a cambiar de tienda?","Fácil en abstracto; no aterriza condiciones."]]}
+};
+
+const CANDIDATES=[
+ {id:"mateo",name:"Mateo",age:26,tag:"El vendedor ambicioso",
+  cv:"3 años en retail de moda rápida como top vendedor. Números altos y mucha energía; busca crecer rápido. Sin experiencia en joyería.",
+  destaca:"Ganas de crecer · Energía que inspira · Orientación a resultados",
+  met:[false,true,true,false,true,false,true,true,true], shadows:["crecer","energia"]},
+ {id:"valeria",name:"Valeria",age:31,tag:"El trato excepcional",
+  cv:"5 años en perfumería y retail de atención al cliente. Clientas fieles que la buscan por su trato. Cálida; menos cómoda con la presión de metas.",
+  destaca:"Crea conexiones genuinas · Crea experiencias memorables · Orientación al cliente",
+  met:[true,false,false,true,true,true,true,true,true], shadows:["conexion","experiencias"]},
+ {id:"andres",name:"Andrés",age:38,tag:"El operador sólido",
+  cv:"8 años en retail, key holder. Impecable en procesos, caja y estándares. Rígido con lo nuevo y poca chispa comercial.",
+  destaca:"Cumple lo que promete · Cuida cada detalle · Se adueña de su rol",
+  met:[false,true,false,false,true,true,false,true,true], shadows:["cumple","detalle","rol"]},
+ {id:"rocio",name:"Rocío",age:22,tag:"La promesa por pulir",
+  cv:"Recién egresada, 1 año en cafetería. Primer empleo en retail. Entusiasta, aprende rápido, disponibilidad total. Sin rodaje comercial ni de caja.",
+  destaca:"Aprende y busca mejorar · Actitud positiva ante los retos · Ganas de crecer",
+  met:[false,false,false,true,true,true,true,false,false], shadows:["aprende","actitud","crecer"]}
+];
+
+const DIMENSIONS=[
+ {id:"estandar",label:"Estándar y expectativas",
+  intencional:"Priorizo qué se espera de la persona en los primeros 30 días y cómo sabrá que avanza.",
+  atajo:"Le doy toda la información en la inducción y confío en que la práctica lo aclare.",
+  mensaje:"Informar no es dar claridad."},
+ {id:"conexion",label:"Conexión y pertenencia",
+  intencional:"Diseño oportunidades para que se integre y le asigno un compañero de apoyo.",
+  atajo:"El equipo es abierto; ya se integrará sola con el tiempo.",
+  mensaje:"La pertenencia se diseña, no ocurre sola."},
+ {id:"conversaciones",label:"Conversaciones y seguimiento",
+  intencional:"Agendo seguimientos breves para reconocer avances y detectar temprano si algo no va.",
+  atajo:"Si no hay problemas, no la interrumpo; ya me dirá si algo pasa.",
+  mensaje:"El silencio no significa que todo esté bien."},
+ {id:"integracion",label:"Integración y equidad",
+  intencional:"Mismo estándar para todos, pero ajusto el acompañamiento a lo que cada una necesita.",
+  atajo:"Para ser justo, le doy exactamente lo mismo que a todos.",
+  mensaje:"Equidad no es igualdad."}
+];
+const SHADOW_MAP={ estandar:["crecer","experiencias","detalle","cumple"], conexion:["actitud"],
+  conversaciones:["conexion","aprende"], integracion:["energia","rol"] };
+
+const CHALLENGES={
+ crecer:{prot:"Valentina",esc:"Valentina es de las asociadas con mejores resultados. En una jornada de alta afluencia, por cerrar rápido, aceleró la atención. Al cierre se detectaron dos errores de cobro y una garantía mal registrada.",
+  opts:[["A","Conversar sobre los errores y reforzar respetar cada paso del proceso, sea cual sea el volumen."],
+        ["B","Reconocer su orientación a resultados y analizar juntos qué decidió, para sostener el desempeño sin comprometer la calidad.",true],
+        ["C","Recordar a todo el equipo la importancia de los procesos en alta demanda."],
+        ["D","Pedirle que en alta afluencia reduzca el ritmo para minimizar errores."]]},
+ conexion:{prot:"Sofía",esc:"Sofía genera un clima excelente y muy buenas relaciones. Detectas una oportunidad de mejora en su desempeño, pero pospones la conversación porque temes afectar la buena relación.",
+  opts:[["A","Esperar una nueva situación para ver cómo evoluciona antes de decidir si hablas."],
+        ["B","Aprovechar la próxima reunión de equipo para reforzar estándares y ver si cambia."],
+        ["C","Tener una conversación individual con ejemplos concretos, preguntando cómo lo vivió y acordando acciones.",true],
+        ["D","Reconocer su impacto e introducir mejoras poco a poco en los seguimientos."]]},
+ actitud:{prot:"Andrea",esc:"Andrea transmite calma bajo presión y suele recuperarse rápido. En las últimas semanas participa menos, evita pedir apoyo y responde que “todo bien”, aunque su actitud cambió.",
+  opts:[["A","Respetar su espacio y estar disponible para cuando decida hablar."],
+        ["B","Reconocer su capacidad de afrontar presión y recordarle que el equipo la apoya."],
+        ["C","Generar seguimientos individuales las próximas semanas para entender cómo está y detectar temprano si necesita apoyo.",true],
+        ["D","Reducir temporalmente sus responsabilidades hasta que se sienta como antes."]]},
+ energia:{prot:"Lucía",esc:"Lucía conecta con facilidad y es un referente natural. En las reuniones muchos esperan su opinión antes de hablar y, con el tiempo, algunos participan cada vez menos.",
+  opts:[["A","Modificar la dinámica de las reuniones para que todos participen por igual."],
+        ["B","Pedirle que intervenga menos para dar espacio al resto."],
+        ["C","Reconocer su influencia y pedirle que anime a otros a compartir sus ideas."],
+        ["D","Conversar sobre cómo usar su influencia para desarrollar a otros, volviendo su liderazgo una herramienta para el equipo.",true]]},
+ cumple:{prot:"Daniela",esc:"Daniela es muy confiable y mantiene los estándares. Hace un recorrido de venta muy consistente, pero le cuesta adaptar la conversación a cada cliente y sigue el mismo guion aunque haya opción de personalizar.",
+  opts:[["A","Reconocer su consistencia y trabajar cómo incorporar gradualmente una venta más personalizada."],
+        ["B","Explicarle que hay que adaptar cada conversación y pedirle que lo aplique en todas sus ventas."],
+        ["C","Revisar juntos algunas interacciones para hallar oportunidades, acompañarla en la práctica y hacer seguimiento.",true],
+        ["D","Mantener su forma de vender mientras dé buenos resultados."]]},
+ aprende:{prot:"Tomás",esc:"Tomás disfruta aprender y destaca en los lanzamientos. Pero en tareas rutinarias (inventario, orden de stock) pierde el interés y necesita recordatorios.",
+  opts:[["A","Conversar sobre mantener el mismo compromiso en todas las tareas y fijar expectativas claras."],
+        ["B","Asignarle nuevos desafíos de producto, evitando lo rutinario siempre que se pueda."],
+        ["C","Aprovechar su interés por aprender e involucrarlo en retos, acordando objetivos para sostener la constancia y haciendo seguimiento.",true],
+        ["D","Rotarlo más entre responsabilidades para que no se aburra."]]},
+ experiencias:{prot:"Camila",esc:"Camila recibe excelentes comentarios y dedica el tiempo necesario a cada caso. Para que una clienta no se fuera disconforme, aceptó una excepción al proceso sin consultar. La clienta quedó feliz, pero generó dudas en el equipo.",
+  opts:[["A","Explicarle que, ante cualquier excepción, siempre debe consultar antes."],
+        ["B","Reconocer su compromiso con el cliente y trabajar cómo equilibrarlo con los estándares y el negocio.",true],
+        ["C","Recordar al equipo qué excepciones permite la compañía."],
+        ["D","Pedirle que priorice los procesos por encima de la satisfacción del cliente."]]},
+ rol:{prot:"Florencia",esc:"Florencia resuelve sin esperar instrucciones. En una jornada de mucho movimiento tomó una decisión con un cliente sin consultar. Resolvió el caso, pero generó dudas sobre cuándo se puede decidir de forma autónoma.",
+  opts:[["A","Pedirle que a partir de ahora consulte antes cualquier decisión fuera de lo habitual."],
+        ["B","Reconocer su capacidad y acordar qué decisiones puede tomar sola y cuáles requieren alineación, compartiéndolo con el equipo.",true],
+        ["C","Recordar al equipo los procedimientos ante situaciones excepcionales."],
+        ["D","Explicarle que estas decisiones quedan solo en manos del Store Manager."]]},
+ detalle:{prot:"Martina",esc:"Martina cuida cada detalle como nadie. En una jornada de alta afluencia se detiene tanto en dejar cada vitrina y empaque perfectos que varios clientes esperan, y una compañera comenta que “con Martina nada está nunca suficientemente bien”.",
+  opts:[["A","Pedirle que en alta afluencia priorice la rapidez y deje los detalles para momentos de menor movimiento."],
+        ["B","Reconocer su cuidado por la excelencia y trabajar cómo distinguir qué nivel de detalle aporta valor en cada momento, sin frenar ni desgastar.",true],
+        ["C","Recordar al equipo equilibrar la presentación con la agilidad."],
+        ["D","Mantener su forma de trabajar, ya que eleva el estándar."]]}
+};
+
+/* ===================== ESTADO ===================== */
+const FRESH={ screen:"lang", lang:null, alias:null, startedAt:null, finishedAt:null,
+  act1:{selected:[], priorities:[], puzzleIdx:0, puzzleErrors:{}, candidate:null},
+  act2:{ranking:[], enfoque:{}, neglected:null},
+  act3:{shadow:null, choice:null}, timeouts:[] };
+let state=load()||clone(FRESH);
+const app=document.getElementById("app"), topBar=document.getElementById("top"), timerEl=document.getElementById("timer");
+let cancelTimer=null;
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function save(){try{localStorage.setItem("fullbloom2",JSON.stringify(state));}catch(e){}}
+function load(){try{return JSON.parse(localStorage.getItem("fullbloom2"));}catch(e){return null;}}
+function resetGame(){if(cancelTimer)cancelTimer();state=clone(FRESH);save();screenLang();}
+function poolById(id){return POOL.find(p=>p.id===id);}
+function buildRecord(){return {alias:state.alias,lang:state.lang,startedAt:state.startedAt,finishedAt:state.finishedAt,
+  act1:{selected:state.act1.selected,priorities:state.act1.priorities,candidate:state.act1.candidate},
+  act2:{ranking:state.act2.ranking,enfoque:state.act2.enfoque,neglected:state.act2.neglected},
+  act3:state.act3,timeouts:state.timeouts};}
+async function syncToSheet(){if(!CONFIG.sheetEndpoint)return;try{await fetch(CONFIG.sheetEndpoint,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(buildRecord())});}catch(e){}}
+
+function fmt(s){return `${String(Math.floor(s/60)).padStart(2,"0")}:${String(Math.max(0,s%60)).padStart(2,"0")}`;}
+function startTimer(sec,onEnd){if(cancelTimer)cancelTimer();let left=sec;timerEl.classList.remove("hidden");timerEl.textContent=fmt(left);
+  const id=setInterval(()=>{left--;timerEl.textContent=fmt(left);if(left<=0){clearInterval(id);cancelTimer=null;onEnd&&onEnd();}},1000);
+  cancelTimer=()=>{clearInterval(id);timerEl.classList.add("hidden");cancelTimer=null;};}
+function armDelib(btn,sec){const base=btn.dataset.base||btn.textContent;btn.dataset.base=base;
+  if(sec<=0){btn.dataset.delib="done";if(btn.dataset.ready==="1")btn.disabled=false;return;}
+  btn.disabled=true;let left=sec;btn.textContent=`${base} (${left}s)`;
+  const id=setInterval(()=>{left--;if(left<=0){clearInterval(id);btn.textContent=base;btn.dataset.delib="done";if(btn.dataset.ready==="1")btn.disabled=false;}else btn.textContent=`${base} (${left}s)`;},1000);}
+function render(html,opts){opts=opts||{};topBar.style.visibility=opts.top?"visible":"hidden";
+  if(!opts.timer&&cancelTimer)cancelTimer();if(!opts.timer)timerEl.classList.add("hidden");
+  app.innerHTML='<div class="screen">'+html+'</div>';try{window.scrollTo(0,0);}catch(e){}}
+function cta(inner){return `<div class="cta-wrap"><div class="cta-inner">${inner}</div></div>`;}
+const bloomSvg=(sz)=>`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24"><g fill="none" stroke="#E0729B" stroke-width="1.2"><path d="M12 12c0-3 1.5-5 0-8-1.5 3 0 5 0 8Z"/><path d="M12 12c0-3-1.5-5 0-8" transform="rotate(72 12 12)"/><path d="M12 12c0-3-1.5-5 0-8" transform="rotate(144 12 12)"/><path d="M12 12c0-3-1.5-5 0-8" transform="rotate(216 12 12)"/><path d="M12 12c0-3-1.5-5 0-8" transform="rotate(288 12 12)"/></g><circle cx="12" cy="12" r="2.1" fill="#D9B45E"/></svg>`;
+
+/* ===================== PANTALLAS ===================== */
+function screenLang(){
+  render(`<div class="hero">${bloomSvg(60)}</div>
+   <p class="eyebrow center">Store Manager Conference 2026</p>
+   <h1 class="center" style="font-size:32px">Full Bloom</h1>
+   <p class="center" style="color:var(--gold-soft);font-style:italic;margin-top:-4px">Hacer Florecer el Talento a través del Liderazgo</p>
+   <p class="lead center" style="margin-top:16px">¿Ya está el equipo al completo? ¿Ya tenéis todo listo en la mesa?<br>Si ya estáis preparados, elegid el idioma y empecemos.</p>
+   <div class="grid" style="margin-top:12px">
+     <button class="opt" data-l="es"><span class="txt">Español (LATAM)</span></button>
+     <button class="opt" data-l="pt"><span class="txt">Português (Brasil)</span></button></div>`,{});
+  app.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{state.lang=b.dataset.l;save();screenWelcome();});
+}
+function screenWelcome(){
+  render(`<p class="eyebrow">Full Bloom</p><h1>Sois un solo equipo</h1>
+   <p class="lead">Debéis consensuar todas las decisiones que vais a tomar a lo largo de este juego. Cada decisión cuenta, y contáis con un tiempo limitado para debatir y decidir como equipo.</p>
+   <p class="lead">El juego tiene una duración máxima de <b>${esc(CONFIG.durationLabel)} minutos</b>. <b style="color:var(--gold-soft)">No gana quien termina primero.</b></p>
+   <label class="muted" style="display:block;margin-bottom:8px">La primera decisión importante es: ¿cómo se llama vuestro equipo?</label>
+   <input class="alias" id="alias" maxlength="30" placeholder="Nombre del equipo" value="${esc(state.alias||"")}">
+   ${cta(`<button class="cta" id="start" disabled>Empezar</button>`)}`,{top:true});
+  const inp=document.getElementById("alias"),btn=document.getElementById("start");
+  const upd=()=>btn.disabled=inp.value.trim().length===0;inp.oninput=upd;upd();
+  btn.onclick=()=>{state.alias=inp.value.trim();state.startedAt=new Date().toISOString();save();screenReq();}
+}
+/* --- ACTO 1A · requisición --- */
+function screenReq(){
+  let html=`<p class="eyebrow">Acto 1 · Fase A · La requisición</p><h1>Nos ponemos en situación</h1>
+   <p class="lead">Sois Store Manager en Pandora: tenéis una vacante en vuestra tienda y debéis reclutar un/a Sales Assistant para el equipo. Como todo proceso de selección, empezamos por definir el perfil.</p>
+   <p class="lead">Decidid cuáles son las competencias clave que buscáis. <b>Elegid solo las que sean relevantes para el rol.</b></p><div class="grid" id="pool">`;
+  let curBlock="";
+  POOL.forEach(p=>{ if(p.block!==curBlock){curBlock=p.block;html+=`<div class="blocklabel">${esc(p.block)}</div>`;}
+    html+=`<button class="opt" data-id="${p.id}"><span class="box"></span><span class="txt">${esc(p.name)}</span></button>`;});
+  html+=`</div>`+cta(`<button class="cta" id="reqc">Continuar a la entrevista</button><div class="count" id="cnt"></div>`);
+  render(html,{top:true,timer:true});
+  startTimer(CONFIG.timers.act1,()=>{ if(state.act1.selected.length>=CONFIG.numPriorities) afterReq(); });
+  const btn=document.getElementById("reqc"),cnt=document.getElementById("cnt");
+  armDelib(btn,CONFIG.deliberationMin.req);
+  function refresh(){const n=state.act1.selected.length;cnt.textContent=`${n} elegidas · mínimo ${CONFIG.numPriorities}`;
+    const ok=n>=CONFIG.numPriorities;btn.dataset.ready=ok?"1":"0";btn.disabled=!ok||btn.dataset.delib!=="done";
+    app.querySelectorAll("#pool .opt").forEach(o=>o.classList.toggle("sel",state.act1.selected.includes(o.dataset.id)));}
+  app.querySelectorAll("#pool .opt").forEach(o=>o.onclick=()=>{const id=o.dataset.id,i=state.act1.selected.indexOf(id);
+    if(i>=0)state.act1.selected.splice(i,1);else state.act1.selected.push(id);save();refresh();});
+  btn.onclick=()=>{ if(state.act1.selected.length>=CONFIG.numPriorities) afterReq(); };
+  refresh();
+}
+function afterReq(){ // ordenar prioridades: de las elegidas con mayor peso, escoger las top N por orden
+  screenPriorities();
+}
+function screenPriorities(){
+  // candidatas a prioridad: elegidas ordenadas por peso desc (excluye distractores)
+  const cands=state.act1.selected.map(poolById).filter(p=>p&&!p.dist).sort((a,b)=>b.w-a.w);
+  render(`<p class="eyebrow">Acto 1 · Fase B · La entrevista</p><h1>Preparad la entrevista</h1>
+   <p class="lead">Llega el momento de preparar la entrevista. Tenéis que enfocaros en las <b>3 competencias o requisitos más importantes y prioritarios</b>. Elegidlos tocando en orden de mayor a menor importancia. Nos centraremos en ese momento de la entrevista que nos ayudará a detectar esas competencias en concreto.</p>
+   <div class="grid" id="pri">${cands.map(p=>`<button class="opt" data-id="${p.id}"><span class="rank" style="visibility:hidden">·</span><span class="txt">${esc(p.name)}</span></button>`).join("")}</div>
+   ${cta(`<button class="cta" id="pc" disabled>Empezar la entrevista</button>`)}`,{top:true});
+  let picks=[];const btn=document.getElementById("pc");
+  app.querySelectorAll("#pri .opt").forEach(o=>o.onclick=()=>{const id=o.dataset.id,i=picks.indexOf(id);
+    if(i>=0){picks.splice(i,1);}else if(picks.length<CONFIG.numPriorities){picks.push(id);}
+    app.querySelectorAll("#pri .opt").forEach(x=>{const r=picks.indexOf(x.dataset.id);const rk=x.querySelector(".rank");
+      if(r>=0){x.classList.add("sel");rk.style.visibility="visible";rk.textContent=r+1;}else{x.classList.remove("sel");rk.style.visibility="hidden";}});
+    btn.disabled=picks.length!==CONFIG.numPriorities;});
+  btn.onclick=()=>{state.act1.priorities=picks.slice();state.act1.puzzleIdx=0;save();screenPuzzle();};
+}
+/* --- ACTO 1B · entrevista / escape room --- */
+function getOptions(pz){
+  if(pz.options) return {multi:!!pz.multi, options:pz.options.map(o=>({text:o.text,correct:!!o.correct,why:o.why||"",near:o.near||""}))};
+  return {multi:false, options:[{text:pz.good,correct:true,why:"",near:""}].concat((pz.weak||[]).map(w=>({text:w[0],correct:false,why:w[1],near:""})))};
+}
+function screenPuzzle(){
+  const prios=state.act1.priorities.filter(id=>PUZZLES[id]);
+  if(state.act1.puzzleIdx>=prios.length){ syncToSheet(); return screenCandidates(); }
+  const compId=prios[state.act1.puzzleIdx], comp=poolById(compId);
+  const cfg=getOptions(PUZZLES[compId]), opts=cfg.options, multi=cfg.multi;
+  const order=opts.map((_,i)=>i);
+  for(let i=order.length-1;i>0;i--){const j=(i+state.act1.puzzleIdx*7+3)%(i+1);[order[i],order[j]]=[order[j],order[i]];}
+  const correctSet=opts.map((o,i)=>o.correct?i:-1).filter(i=>i>=0);
+  render(`<div class="stepdots">${prios.map((_,i)=>`<i class="${i<=state.act1.puzzleIdx?'on':''}"></i>`).join("")}</div>
+   <p class="eyebrow">Acto 1 · Fase B · La entrevista</p>
+   <h2>${esc(comp.name)}</h2>
+   <p class="lead">${multi?"Hay <b>más de una</b> pregunta que detecta esta competencia. Marcad todas las que la detecten y descartad el resto.":"¿Cuál de estas preguntas <b>detecta de verdad</b> esta competencia? Descarta las que no y quédate con una."}</p>
+   <div class="grid" id="pz">${order.map((k,pos)=>`<button class="opt" data-k="${k}"><span class="${multi?'box':'letter'}">${multi?'':"ABCDE"[pos]}</span><span class="txt">${esc(opts[k].text)}</span></button>`).join("")}</div>
+   <div id="fbarea"></div>
+   ${cta(`<button class="cta" id="pzc" disabled>Confirmar</button>`)}`,{top:true,timer:true});
+  if(state.act1.puzzleIdx===0) startTimer(CONFIG.timers.act1,()=>{});
+  const btn=document.getElementById("pzc"); let picks=[];
+  const fb=(h)=>document.getElementById("fbarea").innerHTML=`<div class="fb">${h}</div>`;
+  function advance(){app.querySelectorAll("#pz .opt").forEach(x=>x.classList.add("disabled"));btn.textContent="Siguiente";btn.disabled=false;btn.onclick=()=>{state.act1.puzzleIdx++;save();screenPuzzle();};}
+  app.querySelectorAll("#pz .opt").forEach(o=>o.onclick=()=>{
+    if(o.classList.contains("bad")||o.classList.contains("disabled"))return;
+    const k=parseInt(o.dataset.k);
+    if(multi){const i=picks.indexOf(k);if(i>=0){picks.splice(i,1);o.classList.remove("sel");}else{picks.push(k);o.classList.add("sel");}btn.disabled=picks.length===0;}
+    else{picks=[k];app.querySelectorAll("#pz .opt").forEach(x=>x.classList.toggle("sel",x===o));btn.disabled=false;}
+  });
+  btn.onclick=()=>{
+    if(!picks.length)return;
+    if(multi){
+      const wrong=picks.filter(k=>!opts[k].correct), missing=correctSet.filter(k=>!picks.includes(k));
+      if(wrong.length){wrong.forEach(k=>{const el=app.querySelector(`[data-k="${k}"]`);el.classList.add("bad");el.classList.remove("sel");});picks=picks.filter(k=>opts[k].correct);
+        fb(`<span class="w">Esa no.</span> ${esc(opts[wrong[0]].why)}`);btn.disabled=picks.length===0;}
+      else if(missing.length){fb(`<span class="w">Casi.</span> Hay más de una pregunta que detecta esta competencia: falta al menos una.`);}
+      else{picks.forEach(k=>app.querySelector(`[data-k="${k}"]`).classList.add("good"));fb(`<b style="color:var(--green)">Así se detecta.</b> Las conductuales concretas revelan conducta real.`);advance();}
+    } else {
+      const k=picks[0], o=opts[k], el=app.querySelector(`[data-k="${k}"]`);
+      if(o.correct){el.classList.add("good");fb(`<b style="color:var(--green)">Así se detecta.</b> Pide un caso concreto —conducta real, no una opinión.`);advance();}
+      else if(o.near){el.classList.remove("sel");el.classList.add("disabled");fb(`<b style="color:var(--gold)">${esc(o.near)}</b>`);picks=[];btn.disabled=true;}
+      else{el.classList.add("bad");el.classList.remove("sel");state.act1.puzzleErrors[compId]=(state.act1.puzzleErrors[compId]||0)+1;save();fb(`<span class="w">Esa no.</span> ${esc(o.why)} Sigue buscando la que pide un ejemplo concreto.`);picks=[];btn.disabled=true;}
+    }
+  };
+}
+/* --- ACTO 1C · candidatos --- */
+function screenCandidates(){
+  render(`<p class="eyebrow">Acto 1 · Fase C · Los candidatos</p><h1>Elegid a quién contratáis</h1>
+   <p class="lead">En este punto ya habéis entrevistado a varios candidatos y habéis preseleccionado a 4 de ellos. Todos tienen potencial y fortalezas distintas, pero solo podéis seleccionar a una persona. Como en la vida real, los candidatos ideales —que reúnen todos los requisitos— son difíciles de encontrar. Decidid en equipo quién será contratado.</p>
+   <div class="grid" id="cands">${CANDIDATES.map(c=>`
+     <button class="opt" data-id="${c.id}" style="flex-direction:column;align-items:stretch;gap:6px">
+       <div><b style="font-family:var(--serif);font-size:19px">${esc(c.name)} · ${c.age}</b> <span class="muted">${esc(c.tag)}</span></div>
+       <div class="muted" style="font-size:13.5px">${esc(c.cv)}</div>
+       <div style="margin-top:4px">${c.met.map((m,i)=>`<div class="chk ${m?"":"no"}"><span class="b ${m?"yes":"no"}">${m?"☑":"☐"}</span><span>${esc(REQS[i])}</span></div>`).join("")}</div>
+     </button>`).join("")}</div>
+   ${cta(`<button class="cta" id="cc" disabled>Contratar a este</button>`)}`,{top:true});
+  let pick=null;const btn=document.getElementById("cc");armDelib(btn,CONFIG.deliberationMin.candidate);btn.dataset.ready="0";
+  app.querySelectorAll("#cands .opt").forEach(o=>o.onclick=()=>{pick=o.dataset.id;
+    app.querySelectorAll("#cands .opt").forEach(x=>x.classList.toggle("sel",x===o));
+    btn.dataset.ready="1";if(btn.dataset.delib==="done")btn.disabled=false;});
+  btn.onclick=()=>{if(!pick)return;state.act1.candidate=pick;save();syncToSheet();screenAct2Diag();};
+}
+/* --- ACTO 2 · plan de onboarding --- */
+function cand(){return CANDIDATES.find(c=>c.id===state.act1.candidate);}
+function screenAct2Diag(){
+  const c=cand();const gaps=c.met.map((m,i)=>m?null:REQS[i]).filter(Boolean);
+  render(`<p class="eyebrow">Acto 2 · El plan de onboarding</p><h1>Habéis contratado a ${esc(c.name)}</h1>
+   <p class="lead">Tiene mucho potencial y buenas fortalezas, pero también oportunidades de desarrollo. En la siguiente lista encontraréis los requisitos que decidisteis al inicio y que ${esc(c.name)} no cumple al 100%:</p>
+   <div class="block">${gaps.map(g=>`<div class="chk no"><span class="b no">☐</span><span>${esc(g)}</span></div>`).join("")}</div>
+   <p class="lead">Con esta lista en mente, hay que preparar su plan de onboarding.</p>
+   ${cta(`<button class="cta" id="d">Planificar su onboarding</button>`)}`,{top:true,timer:true});
+  startTimer(CONFIG.timers.act2,()=>{ if(state.act2.ranking.length===4) finishAct2(); });
+  document.getElementById("d").onclick=()=>screenRanking();
+}
+function screenRanking(){
+  render(`<p class="eyebrow">Acto 2 · Prioriza</p><h1>¿En qué os centráis primero?</h1>
+   <p class="lead">Como Store Manager, no vais a poder desarrollar todas las áreas de oportunidad al mismo tiempo, así que debéis decidir en cuál es prioritario centrarse en las primeras semanas, para que ese talento florezca. Ordenad las 4 dimensiones del onboarding según lo que sea más necesario trabajar con <b>${esc(cand().name)}</b> (1 = lo más importante y urgente).</p>
+   <div class="grid" id="rk">${DIMENSIONS.map(d=>`<button class="opt" data-id="${d.id}"><span class="rank" style="visibility:hidden">·</span><span class="txt">${esc(d.label)}</span></button>`).join("")}</div>
+   ${cta(`<button class="cta" id="rc" disabled>Confirmar prioridades</button>`)}`,{top:true,timer:true});
+  let picks=[];const btn=document.getElementById("rc");
+  app.querySelectorAll("#rk .opt").forEach(o=>o.onclick=()=>{const id=o.dataset.id,i=picks.indexOf(id);
+    if(i>=0)picks.splice(i,1);else if(picks.length<4)picks.push(id);
+    app.querySelectorAll("#rk .opt").forEach(x=>{const r=picks.indexOf(x.dataset.id),rk=x.querySelector(".rank");
+      if(r>=0){x.classList.add("sel");rk.style.visibility="visible";rk.textContent=r+1;}else{x.classList.remove("sel");rk.style.visibility="hidden";}});
+    btn.disabled=picks.length!==4;});
+  btn.onclick=()=>{state.act2.ranking=picks.slice();state.act2.neglected=picks[3];save();screenEnfoque(0);};
+}
+function screenEnfoque(i){
+  const top=state.act2.ranking.slice(0,3);
+  if(i>=top.length){ save();return finishAct2(); }
+  const d=DIMENSIONS.find(x=>x.id===top[i]);
+  render(`<div class="stepdots">${top.map((_,k)=>`<i class="${k<=i?'on':''}"></i>`).join("")}</div>
+   <p class="eyebrow">Acto 2 · Diseña el enfoque · prioridad ${i+1}</p><h2>${esc(d.label)}</h2>
+   <p class="lead">¿Cómo lo planificáis para ${esc(cand().name)}?</p>
+   <div class="grid" id="en">
+     <button class="opt" data-v="intencional"><span class="box"></span><span class="txt">${esc(d.intencional)}</span></button>
+     <button class="opt" data-v="atajo"><span class="box"></span><span class="txt">${esc(d.atajo)}</span></button>
+   </div>${cta(`<button class="cta" id="ec" disabled>Confirmar</button>`)}`,{top:true,timer:true});
+  let pick=null;const btn=document.getElementById("ec");
+  app.querySelectorAll("#en .opt").forEach(o=>o.onclick=()=>{pick=o.dataset.v;app.querySelectorAll("#en .opt").forEach(x=>x.classList.toggle("sel",x===o));btn.disabled=false;});
+  btn.onclick=()=>{state.act2.enfoque[d.id]=pick;save();screenEnfoque(i+1);};
+}
+function finishAct2(){if(cancelTimer)cancelTimer();syncToSheet();screenReveal();}
+function screenReveal(){
+  const atajos=Object.keys(state.act2.enfoque).filter(k=>state.act2.enfoque[k]==="atajo").map(k=>DIMENSIONS.find(d=>d.id===k));
+  const neg=DIMENSIONS.find(d=>d.id===state.act2.neglected);
+  let html=`<p class="eyebrow">Antes del mundo real</p><h1>Lo que vuestro plan deja expuesto</h1>`;
+  if(atajos.length){html+=`<p class="lead">Tomasteis algún atajo:</p>`+atajos.map(d=>`<div class="block"><div class="role roleB">${esc(d.label)} — el atajo</div><i>${esc(d.mensaje)}</i></div>`).join("");}
+  else{html+=`<p class="lead">No tomasteis atajos en vuestras prioridades. Bien.</p>`;}
+  html+=`<div class="block" style="border-color:var(--rose)"><div class="role roleA">El flanco descubierto</div>Dejasteis <b>${esc(neg.label)}</b> en último lugar. Eso es justo lo que no preparasteis… y lo que puede pasaros factura ahora.</div>`;
+  html+=cta(`<button class="cta" id="rc2">Ir al mundo real</button>`);
+  render(html,{top:true});
+  document.getElementById("rc2").onclick=()=>routeShadow();
+}
+/* --- ACTO 3 --- */
+function exposedShadows(){
+  const c=cand();const amp=SHADOW_MAP[state.act2.neglected]||[];
+  const exposed=c.shadows.filter(s=>amp.includes(s));
+  return exposed.length?exposed:[c.shadows[0]]; // si ninguna coincide -> sombra dominante
+}
+function routeShadow(){
+  const ex=exposedShadows();
+  if(ex.length===1){state.act3.shadow=ex[0];save();return screenCase();}
+  // varias -> el equipo prioriza cuál trabajar primero
+  render(`<p class="eyebrow">Acto 3 · El mundo real</p><h1>Emergieron varias sombras</h1>
+   <p class="lead">El flanco que dejasteis en <b>${esc(DIMENSIONS.find(d=>d.id===state.act2.neglected).label)}</b> destapó más de una. ¿Cuál trabajáis <b>primero</b>?</p>
+   <div class="grid" id="sh">${ex.map(s=>`<button class="opt" data-s="${s}"><span class="box"></span><span class="txt">${esc(shadowLabel(s))}</span></button>`).join("")}</div>
+   ${cta(`<button class="cta" id="shc" disabled>Afrontar esta</button>`)}`,{top:true});
+  let pick=null;const btn=document.getElementById("shc");
+  app.querySelectorAll("#sh .opt").forEach(o=>o.onclick=()=>{pick=o.dataset.s;app.querySelectorAll("#sh .opt").forEach(x=>x.classList.toggle("sel",x===o));btn.disabled=false;});
+  btn.onclick=()=>{state.act3.shadow=pick;save();screenCase();};
+}
+function shadowLabel(s){const c=CHALLENGES[s];const m={crecer:"Impaciencia por los resultados",conexion:"Amiguismo, evita el conflicto",actitud:"Aguanta y se aísla en silencio",energia:"Necesita protagonismo",cumple:"Rigidez ante el cambio",aprende:"Se dispersa, se aburre con la rutina",experiencias:"Se sobre-implica, regala de más",rol:"Va por libre",detalle:"Perfeccionismo que frena"};return m[s]+" ("+c.prot+")";}
+function screenCase(){
+  const ch=CHALLENGES[state.act3.shadow];const c=cand();
+  render(`<p class="eyebrow">Acto 3 · El mundo real</p>
+   <p class="muted" style="margin:-2px 0 10px">Han pasado varios meses. La sombra que traía ${esc(c.name)} se hizo visible.</p>
+   <p class="lead">${esc(ch.esc)}</p>
+   <div class="grid" id="co">${ch.opts.map(o=>`<button class="opt" data-o="${o[0]}"><span class="letter">${o[0]}</span><span class="txt">${esc(o[1])}</span></button>`).join("")}</div>
+   ${cta(`<button class="cta" id="cc3">Registrar decisión</button>`)}`,{top:true,timer:true});
+  startTimer(CONFIG.timers.act3,()=>finishCase());
+  let pick=null;const btn=document.getElementById("cc3");armDelib(btn,CONFIG.deliberationMin.act3case);btn.dataset.ready="0";
+  app.querySelectorAll("#co .opt").forEach(o=>o.onclick=()=>{pick=o.dataset.o;app.querySelectorAll("#co .opt").forEach(x=>x.classList.toggle("sel",x===o));btn.dataset.ready="1";if(btn.dataset.delib==="done")btn.disabled=false;});
+  btn.onclick=()=>{if(!pick)return;state.act3.choice=pick;finishCase();};
+}
+function finishCase(){if(cancelTimer)cancelTimer();state.finishedAt=new Date().toISOString();save();syncToSheet();screenClose();}
+function screenClose(){
+  const c=cand();const neg=DIMENSIONS.find(d=>d.id===state.act2.neglected);
+  render(`<div class="hero">${bloomSvg(54)}</div>
+   <p class="eyebrow center">Fin de la partida</p><h1 class="center">Lo construisteis vosotros</h1>
+   <div class="block"><div class="role roleA">Contratasteis a</div><b>${esc(c.name)} · ${c.age}</b><br><span class="muted">${esc(c.destaca)}</span></div>
+   <div class="block"><div class="role roleB">Descuidasteis</div>${esc(neg.label)}</div>
+   <p class="lead">El reto que resolvisteis no fue al azar: nació de la sombra que traía quien elegisteis y del flanco que dejasteis sin preparar. La coherencia entre lo que sembráis al inicio y lo que hacéis bajo presión —eso es liderazgo.</p>
+   <p class="quote">${esc(CONFIG.tagline)}</p>
+   <p class="center muted">Podéis tomar una captura antes de terminar.</p><hr class="hr">
+   ${cta(`<button class="cta ghost" id="rs">Nueva partida</button>`)}`,{top:true});
+  document.getElementById("rs").onclick=resetGame;
+}
+/* --- reanudar --- */
+function boot(){
+  const s=load();
+  if(s&&s.screen&&s.screen!=="lang"&&!s.finishedAt&&s.alias){
+    state=s;
+    render(`<div class="hero" style="margin-top:40px">${bloomSvg(48)}</div><h1 class="center">¿Reanudar la partida?</h1>
+     <p class="lead center">Hay una sesión sin terminar del equipo <b>${esc(s.alias)}</b>.</p>
+     ${cta(`<button class="cta" id="res">Reanudar</button><button class="cta ghost" id="new" style="margin-top:10px">Empezar de nuevo</button>`)}`,{});
+    document.getElementById("res").onclick=()=>resume();
+    document.getElementById("new").onclick=resetGame;
+  } else screenLang();
+}
+function resume(){
+  const a1=state.act1,a2=state.act2,a3=state.act3;
+  if(a3.shadow) return screenCase();
+  if(a2.neglected) return screenReveal();
+  if(a2.ranking&&a2.ranking.length) return screenEnfoque(0);
+  if(a1.candidate) return screenAct2Diag();
+  if(a1.priorities&&a1.priorities.length) return screenPuzzle();
+  if(a1.selected&&a1.selected.length) return screenPriorities();
+  if(state.alias) return screenReq();
+  return screenWelcome();
+}
+boot();
+</script>
+</body>
+</html>
+Displaying 20260828 - SMC 2026 - Key Visual No Text-01.png.

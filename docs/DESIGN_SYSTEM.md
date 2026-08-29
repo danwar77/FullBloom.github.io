@@ -14,11 +14,13 @@ La app debe sentirse como una experiencia Pandora de conferencia: clara, premium
 
 ## Componentes
 
-- Cronómetro compacto y fijo, con números tabulares.
+- Cronómetro compacto en la cabecera, con números tabulares y ancho estable.
 - Tarjetas con borde fino, radio de 8px y sombras suaves.
 - Una acción primaria por pantalla, fija en la parte inferior para uso con pulgar.
 - Estados offline como paneles discretos, no modales bloqueantes.
-- Las revelaciones presentan aprendizajes por eje; nunca juicio, acierto o error.
+- La entrevista da feedback formativo sobre la calidad de las preguntas, sin puntuación.
+- La revelación del onboarding presenta atajos y el flanco descubierto sin declarar ganadores.
+- El caso final registra A–D sin mostrar cuál opción interna es la más completa.
 
 ## Reglas
 
