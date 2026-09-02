@@ -3,7 +3,7 @@ window.CONFIG = {
   durationLabel: 'XX',
   numPriorities: 3,
   timers: { sel: 1500, onb: 900, ret: 1200 },
-  deliberationMin: { req: 60, candidate: 45, reto: 45 },
+  deliberationMin: { req: 0, candidate: 45, reto: 45 },
   sheetEndpoint: '',
   storageKey: 'fullbloom',
   stateVersion: 6,
