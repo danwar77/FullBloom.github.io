@@ -142,12 +142,13 @@
 
   function shell(body) {
     const content = C();
+    const subtitle = content.ui.subtitle || CONFIG.subtitle;
     const timer = state.activeTimer
       ? `<div class="timer"><span>${esc(content.app.sections[state.activeTimer])}</span><strong data-timer>${fmt(timeLeft())}</strong></div>`
       : '';
     const offline = !navigator.onLine ? `<p class="notice" role="status">${esc(content.app.offline)}</p>` : '';
     const timeout = state.timeoutNotice ? `<p class="notice timeout-notice" role="status">${esc(content.app.timeout)}</p>` : '';
-    return `<div class="app-shell"><header class="topbar"><div><p class="brand"><span>Full <i>Bloom</i></span></p><p class="tagline">${esc(CONFIG.subtitle)}</p></div>${timer}</header>${offline}${timeout}<section class="screen">${body}</section></div>`;
+    return `<div class="app-shell"><header class="topbar"><div><p class="brand"><span>Full <i>Bloom</i></span></p><p class="tagline">${esc(subtitle)}</p></div>${timer}</header>${offline}${timeout}<section class="screen">${body}</section></div>`;
   }
 
   function option(item, selected, action, extra = '', stateClass = '', disabled = false) {
@@ -162,7 +163,7 @@
 
   function renderLang() {
     const { ui } = C();
-    app.innerHTML = `<div class="app-shell intro"><section class="screen intro-screen"><p class="brand large"><span>Full <i>Bloom</i></span></p><p class="tagline">${esc(CONFIG.subtitle)}</p><h1>${esc(ui.landing)}</h1><div class="language-actions"><button class="language-button" data-action="lang" data-lang="es">${esc(ui.langES)}</button><button class="language-button" data-action="lang" data-lang="pt">${esc(ui.langPT)}</button></div></section><footer class="welcome-credit">© 2026, <a href="https://danwar77.github.io/hologram-web/" target="_blank" rel="noopener noreferrer">Danwar77</a></footer></div>`;
+    app.innerHTML = `<div class="app-shell intro"><section class="screen intro-screen"><p class="brand large"><span>Full <i>Bloom</i></span></p><p class="tagline">${esc(ui.subtitle || CONFIG.subtitle)}</p><h1>${esc(ui.landing)}</h1><div class="language-actions"><button class="language-button" data-action="lang" data-lang="es">${esc(ui.langES)}</button><button class="language-button" data-action="lang" data-lang="pt">${esc(ui.langPT)}</button></div></section><footer class="welcome-credit">© 2026, <a href="https://danwar77.github.io/hologram-web/" target="_blank" rel="noopener noreferrer">Danwar77</a></footer></div>`;
   }
 
   function renderWelcome() {
