@@ -1,5 +1,2 @@
-// Traducción parcial aprobable: cualquier clave que falte usa español como fallback.
-window.CONTENT_PT = {
-  ui: { language: 'A equipe já está completa?', start: 'Começar', continue: 'Continuar', confirm: 'Confirmar', hire: 'Contratar', plan: 'Planejar onboarding', interview: 'Começar a entrevista', register: 'Registrar decisão', world: 'Ir ao mundo real', next: 'Próximo', resume: 'Retomar', restart: 'Começar de novo', sync: 'Sincronizar agora', export: 'Exportar backup', timer: 'Tempo restante', selected: 'selecionadas', minimum: 'mínimo', deliberate: 'Conversem antes de registrar a decisão.', offline: 'Sem conexão: as decisões continuam salvas neste dispositivo.', syncPending: 'Backup aguardando sincronização.', syncDone: 'Registro enviado à planilha.' },
-  welcome: { title: 'Uma decisão compartilhada pode fazer o talento florescer.', premise: 'Vocês são uma única equipe. Conversem com as cartas físicas e registrem uma decisão em cada momento.', rules: 'A duração máxima é de {duration} minutos. Não vence quem termina primeiro: não há pontos nem vencedores.', aliasLabel: 'Apelido da equipe', aliasHelp: 'Escolham um nome curto para identificar a mesa.' },
-};
+// Traducción PT-BR pendiente. La app usa español como fallback completo.
+window.CONTENT_PT = null;

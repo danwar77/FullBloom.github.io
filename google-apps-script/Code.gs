@@ -1,8 +1,8 @@
 const SHEET_NAME = 'respuestas';
 const HEADERS = [
   'session_id', 'timestamp', 'equipo', 'idioma', 'inicio',
-  'competencias', 'prioridades', 'errores_puzzles', 'candidato',
-  'ranking', 'enfoque', 'descuidada', 'sombra', 'decision', 'timeouts', 'fin',
+  'competencias', 'prioridades', 'candidato', 'ranking', 'enfoque',
+  'descuidada', 'retos', 'timeouts', 'fin',
 ];
 
 function doPost(e) {
@@ -16,10 +16,10 @@ function doPost(e) {
     if (sheet.getLastRow() === 0) sheet.appendRow(HEADERS);
     const row = [
       payload.sessionId, new Date(), payload.alias || '', payload.lang || '', payload.startedAt || '',
-      (payload.act1?.selected || []).join('|'), (payload.act1?.priorities || []).join('|'),
-      JSON.stringify(payload.act1?.puzzleErrors || {}), payload.act1?.candidate || '',
-      (payload.act2?.ranking || []).join('|'), JSON.stringify(payload.act2?.enfoque || {}),
-      payload.act2?.neglected || '', payload.act3?.shadow || '', payload.act3?.choice || '',
+      (payload.seleccion?.elegidas || []).join('|'), (payload.seleccion?.prioridades || []).join('|'),
+      payload.seleccion?.candidato || '', (payload.onboarding?.ranking || []).join('|'),
+      JSON.stringify(payload.onboarding?.enfoque || {}), payload.onboarding?.descuidada || '',
+      JSON.stringify(payload.retos || []),
       (payload.timeouts || []).join('|'), payload.finishedAt || '',
     ];
     const ids = sheet.getLastRow() > 1 ? sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().flat() : [];
