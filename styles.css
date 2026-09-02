@@ -74,8 +74,8 @@ h3 { margin: 0; font-size: 19px; }
 .language-button:hover { border-color: var(--rose); background: #fff4f5; }
 .language-button small { color: var(--muted); font-size: 13px; font-weight: 600; }
 .welcome-credit { display: flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px; padding-top: 16px; color: var(--muted); font-size: 12px; }
-.welcome-credit a { display: inline-flex; min-height: 44px; align-items: center; gap: 5px; color: var(--rose-dark); font-weight: 750; text-decoration: none; }
-.welcome-credit a:hover { color: var(--rose); text-decoration: underline; }
+.welcome-credit a { display: inline-flex; min-height: 44px; align-items: center; gap: 5px; color: #000; font-weight: 750; text-decoration: none; }
+.welcome-credit a:hover, .welcome-credit a:focus-visible { color: #000; text-decoration: underline; }
 .welcome-credit svg { width: 15px; height: 15px; fill: currentColor; }
 
 .selection-count { display: inline-flex; margin: 0 0 18px; padding: 8px 10px; border-radius: 99px; background: var(--rose-soft); color: var(--rose-dark); font-weight: 750; }
