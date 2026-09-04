@@ -305,7 +305,7 @@
     const mirrored = Boolean(state.onboarding.mirrorSeen[dimension.id]);
     const actions = ordered(dimension.id, dimension.actions, state.onboarding.actionOrder);
     const choices = actions.map((item, index) => option({ marker: selected.includes(item.originalIndex) ? '✓' : '○', text: replace(item.t, { nombre: candidate().name }) }, selected.includes(item.originalIndex), 'focus-action', `data-id="${item.originalIndex}"`, '', mirrored)).join('');
-    const mirror = mirrored ? `<article class="mirror-card"><h2>${esc(content.ui.espejoTitle)}</h2>${mirrorLists(dimension, selected)}<p>${esc(replace(dimension.mirror, { nombre: candidate().name }))}</p></article>` : '';
+    const mirror = mirrored ? `<article class="mirror-card"><h2>${esc(dimension.label)}</h2>${mirrorLists(dimension, selected)}<p>${esc(replace(dimension.mirror, { nombre: candidate().name }))}</p></article>` : '';
     const action = mirrored ? primary(content.ui.next, 'focus-next') : primary(content.ui.confirm, 'focus-confirm', selected.length === 0);
     app.innerHTML = shell(`<p class="eyebrow">${esc(content.app.sections.onb)} · ${state.onboarding.focusIndex + 1}/3</p><h1>${esc(dimension.label)}</h1><p class="lead">${esc(replace(content.ui.enfoquePrompt, { nombre: candidate().name }))}</p><div class="options">${choices}</div>${mirror}<div class="action-bar">${action}</div>`);
   }
@@ -315,7 +315,7 @@
     const dimensions = state.onboarding.ranking.slice(0, 3).map((id) => byId(content.DIMENSIONS, id));
     const neglected = byId(content.DIMENSIONS, state.onboarding.descuidada);
     const summaries = dimensions.map((dimension) => `<article class="lesson"><h2>${esc(dimension.label)}</h2><p><b>${esc(dimension.principio)}</b></p><p>${esc(replace(dimension.mirror, { nombre: candidate().name }))}</p></article>`).join('');
-    app.innerHTML = shell(`<p class="eyebrow">${esc(content.app.sections.onb)}</p><h1>${esc(content.ui.revealTitle)}</h1><div class="lesson-list">${summaries}</div><p class="rule"><b>${esc(content.ui.flanco)}:</b> ${esc(replace(content.ui.flancoTxt, { dim: neglected?.label || '' }))}</p><div class="action-bar">${primary(content.ui.toRetos, 'to-retos')}</div>`);
+    app.innerHTML = shell(`<p class="eyebrow">${esc(content.app.sections.onb)}</p><h1>${esc(content.ui.revealTitle)}</h1><div class="lesson-list">${summaries}</div><article class="lesson flanco-card"><h2>${esc(content.ui.flanco)}</h2><p>${esc(replace(content.ui.flancoTxt, { dim: neglected?.label || '' }))}</p><p><b>${esc(neglected?.principio || '')}</b></p></article><div class="action-bar">${primary(content.ui.toRetos, 'to-retos')}</div>`);
   }
 
   function prepareChallenges() {
@@ -366,7 +366,7 @@
     const action = feedback
       ? primary(state.retos.index + 1 < state.retos.ids.length ? content.app.challengeNext : content.app.finish, 'challenge-next')
       : primary(content.ui.register, 'challenge-confirm', !ready || wait > 0, `data-deliberation="${waitKey}" data-duration="reto" data-ready="${ready ? '1' : '0'}"`);
-    app.innerHTML = shell(`<p class="eyebrow">${esc(content.app.sections.ret)} · ${esc(progress)}</p><h1>${esc(item.fortaleza)}</h1><p class="lead">${esc(replace(content.ui.retoIntro, { nombre: candidate().name }))}</p><p class="rule"><b>${esc(content.app.challengeLabel)}:</b> ${esc(item.reto)}</p><h2>${esc(replace(item.esc, { nombre: candidate().name }))}</h2><div class="options case-options">${options}</div>${note}<div class="action-bar"><p class="helper" data-delib-count="${waitKey}">${wait ? fmt(wait) : ''}</p>${action}</div>`);
+    app.innerHTML = shell(`<p class="eyebrow">${esc(content.app.sections.ret)} · ${esc(progress)}</p><h1>${esc(item.fortaleza)}</h1><p class="lead">${esc(replace(content.ui.retoIntro, { nombre: candidate().name }))}</p><p class="eic-note">${esc(content.app.eicNote)}</p><p class="rule"><b>${esc(content.app.challengeLabel)}:</b> ${esc(item.reto)}</p><h2>${esc(replace(item.esc, { nombre: candidate().name }))}</h2><div class="options case-options">${options}</div>${note}<div class="action-bar"><p class="helper" data-delib-count="${waitKey}">${wait ? fmt(wait) : ''}</p>${action}</div>`);
   }
 
   function finishGame() {
@@ -506,7 +506,7 @@
     } else if (action === 'start') {
       if (!state.alias.trim()) return;
       state.startedAt = new Date().toISOString();
-      startTimer('sel');
+      startTimer('selA');
       startDeliberation('req');
       go('req');
     } else if (action === 'req-toggle') {
@@ -528,6 +528,7 @@
       render();
     } else if (action === 'prio-next') {
       state.seleccion.puzzleIndex = 0;
+      startTimer('selB');
       go('puzzle');
     } else if (action === 'puzzle-choice') {
       const { id } = currentPuzzle();

@@ -4,19 +4,19 @@ const UI = {
 
   langES:"Español (LATAM)", langPT:"Português (Brasil)",
 
-  landing:"¿Ya está el equipo al completo? ¿Ya tenéis todo listo en la mesa? Si ya estáis preparados, elegid el idioma y empecemos.",
+  landing:"¿Ya está el equipo completo? ¿Ya tienen todo listo sobre la mesa? Si ya están listos, elijan el idioma y arranquemos.",
 
-  welcomeTitle:"Sois un solo equipo",
+  welcomeTitle:"Son un solo equipo",
 
-  welcome:"Debéis consensuar todas las decisiones que vais a tomar a lo largo de este juego. Cada decisión cuenta, y contáis con un tiempo limitado para debatir y decidir como equipo. El juego tiene una duración máxima de {min} minutos. No gana quien termina primero.",
+  welcome:"Deben ponerse de acuerdo en todas las decisiones que van a tomar a lo largo de este juego. Cada decisión cuenta, y tienen un tiempo limitado para debatir y decidir como equipo. El juego dura {min} minutos. No gana quien termina primero.",
 
-  teamQ:"La primera decisión importante es: ¿cómo se llama vuestro equipo?", aliasPh:"Nombre del equipo", start:"Empezar",
+  teamQ:"La primera decisión importante es: ¿cómo se llama su equipo?", aliasPh:"Nombre del equipo", start:"Empezar",
 
-  req:"Sois Store Manager en Pandora: tenéis una vacante en vuestra tienda y debéis reclutar un/a Sales Assistant para el equipo. Como todo proceso de selección, empezamos por definir el perfil. Decidid cuáles son las competencias clave que buscáis. Elegid solo las que sean relevantes para el rol.",
+  req:"Son Store Managers en Pandora: tienen una vacante en su tienda y deben reclutar a un/a Sales Assistant para el equipo. Como todo proceso de selección, empezamos por definir el perfil. Decidan cuáles son las competencias clave que buscan. Elijan solo las que sean relevantes para el rol. No hay un número máximo de requisitos o competencias para seleccionar. En el sobre, que ya pueden abrir, encontrarán las descripciones de cada requisito y competencia.",
 
-  reqCount:"{n} elegidas · mínimo {min}", reqNext:"Continuar a la entrevista",
+  reqCount:"{n} seleccionadas · mínimo {min}", reqNext:"Continuar a la entrevista",
 
-  priorities:"Llega el momento de preparar la entrevista. Tenéis que enfocaros en las 3 competencias o requisitos más importantes y prioritarios. Elegidlos tocando en orden de mayor a menor importancia. Nos centraremos en ese momento de la entrevista que nos ayudará a detectar esas competencias en concreto.",
+  priorities:"Solo para que el juego no se alargue demasiado, elijan las 3 competencias más importantes para el rol y así preparar bien las preguntas de la entrevista. Tóquenlas en orden, de mayor a menor importancia.",
 
   prioNext:"Empezar la entrevista",
 
@@ -24,33 +24,33 @@ const UI = {
 
   puzzleMulti:"Hay más de una pregunta que detecta esta competencia. Marcad todas las que la detecten y descartad el resto.",
 
-  detectaOk:"Así se detecta. Pide un caso concreto —conducta real, no una opinión.",
+  detectaOk:"¡Muy bien! Esta es de las que sí funcionan: pide un ejemplo real de algo que la persona ya vivió, no una opinión ni una promesa. Así ven cómo actúa de verdad, no cómo cree que actúa.",
 
-  detectaOkMulti:"Así se detecta. Las conductuales concretas revelan conducta real.",
+  detectaOkMulti:"¡Excelente! Estas dos se complementan: las dos piden ejemplos reales de lo que la persona ha hecho y, juntas, dan una imagen mucho más completa que una sola.",
 
-  porQueNoMejor:"Por qué no es la mejor pregunta por sí sola:", faltaUna:"Casi. Hay más de una que detecta: falta al menos una.",
+  porQueNoMejor:"Por qué no es la mejor pregunta por sí sola:", faltaUna:"¡Casi! Aquí hay más de una que sirve: les falta al menos una por marcar.",
 
   confirm:"Confirmar", next:"Siguiente",
 
-  candidates:"En este punto ya habéis entrevistado a varios candidatos y habéis preseleccionado a 4 de ellos. Todos tienen potencial y fortalezas distintas, pero solo podéis seleccionar a una persona. Como en la vida real, los candidatos ideales —que reúnen todos los requisitos— son difíciles de encontrar. Decidid en equipo quién será contratado.",
+  candidates:"A esta altura ya entrevistaron a varios candidatos y preseleccionaron a 4. Todos tienen potencial y fortalezas distintas, pero solo pueden elegir a una persona. Como en la vida real, los candidatos ideales —que reúnen todos los requisitos— son difíciles de encontrar. Decidan en equipo a quién contratan. Tomen nota del candidato/a seleccionado y de sus características en el perfil en blanco que incluimos en el sobre: les será de utilidad más adelante si lo necesitan.",
 
   hire:"Contratar a este",
 
-  obDiagTitle:"Habéis contratado a {nombre}", strengths:"Fortalezas", devAreas:"Áreas a desarrollar",
+  obDiagTitle:"Contrataron a {nombre}", strengths:"Fortalezas", devAreas:"Áreas a desarrollar",
 
   obDiagIntro:"Tiene mucho potencial y buenas fortalezas, pero también oportunidades de desarrollo. Con esta lista en mente, hay que preparar su plan de onboarding.",
 
   obPlan:"Planificar su onboarding",
 
-  ranking:"Como Store Manager, no vais a poder desarrollar todas las áreas de oportunidad al mismo tiempo, así que debéis decidir en cuál es prioritario centrarse en las primeras semanas, para que ese talento florezca. Ordenad las 4 dimensiones del onboarding según lo que sea más necesario trabajar con {nombre} (1 = lo más importante y urgente).",
+  ranking:"Como Store Manager, no van a poder desarrollar todas las áreas de oportunidad al mismo tiempo, así que deben decidir en cuál es prioritario enfocarse en las primeras semanas, para que ese talento florezca. Ordenen las 4 dimensiones del onboarding según lo que sea más necesario trabajar con {nombre} (1 = lo más importante y urgente).",
 
   rankNext:"Confirmar prioridades",
 
-  enfoquePrompt:"¿Cómo lo planificáis para {nombre}? Marcad las acciones que haríais.",
+  enfoquePrompt:"¿Cómo lo planean para {nombre}? Marquen las acciones que harían.",
 
-  espejoTitle:"El espejo", espejoTomadas:"De vuestras acciones, estas construyen de verdad:", espejoFaltaron:"Se os pasaron:",
+  espejoTitle:"El espejo", espejoTomadas:"De sus acciones, estas construyen de verdad:", espejoFaltaron:"Se les pasaron:",
 
-  revealTitle:"Antes del día a día", flanco:"El flanco descubierto", flancoTxt:"Dejasteis {dim} en último lugar.",
+  revealTitle:"Antes del día a día", flanco:"El flanco descubierto", flancoTxt:"Dejaron {dim} para el final. Es justo la dimensión que solemos descuidar cuando sentimos que no hay tiempo… y suele ser la que más nos pasa factura después. Ninguna de las cuatro sobra: aunque el día apriete, esta no se puede soltar.",
 
   toRetos:"Ir a los retos del día a día",
 
@@ -412,7 +412,7 @@ const DIMENSIONS = [
 
    {int:false,t:"Entregarle el manual de procedimientos para que lo estudie por su cuenta."}],
 
-  mirror:"Un buen plan aquí no da más información: da claridad —qué es lo importante en cada etapa y cómo se ve hacerlo bien. Si vuestras acciones ayudaban a {nombre} a distinguir lo prioritario, ¡bien visto! Si sobre todo le dabais más información, recordad: informar no es dar claridad."},
+  mirror:"Un buen plan aquí no da más información: da claridad —qué es lo importante en cada etapa y cómo se ve hacerlo bien. Si sus acciones ayudaban a {nombre} a distinguir lo prioritario, ¡bien visto! Si sobre todo le daban más información, recuerden: informar no es dar claridad."},
 
  {id:"conexion",label:"Conexión y pertenencia",principio:"La pertenencia se diseña, no ocurre sola.",
 
@@ -430,7 +430,7 @@ const DIMENSIONS = [
 
    {int:false,t:"Dejar que ella marque el ritmo y se acerque cuando se sienta cómoda."}],
 
-  mirror:"Un buen plan aquí diseña la integración con acciones concretas: no basta con recibir a alguien, hay que hacerlo sentir parte. Si creasteis momentos y apoyos para que {nombre} se integrara, ¡bien! Si lo dejasteis al tiempo o a su iniciativa, recordad: la pertenencia se diseña, no ocurre sola."},
+  mirror:"Un buen plan aquí diseña la integración con acciones concretas: no basta con recibir a alguien, hay que hacerlo sentir parte. Si crearon momentos y apoyos para que {nombre} se integrara, ¡bien! Si lo dejaron al tiempo o a su iniciativa, recuerden: la pertenencia se diseña, no ocurre sola."},
 
  {id:"conversaciones",label:"Conversaciones y seguimiento",principio:"El silencio no significa que todo esté bien.",
 
@@ -448,7 +448,7 @@ const DIMENSIONS = [
 
    {int:false,t:"Preguntarle “¿todo bien?” al pasar y seguir si dice que sí."}],
 
-  mirror:"Un buen plan aquí no espera a que haya un problema: agenda el seguimiento y reconoce lo que va bien, no solo lo que hay que corregir. Si vuestras acciones incluían seguimiento planificado y reconocimiento, ¡bien visto! Si dependían de que {nombre} avisara o solo de corregir errores, recordad: el silencio no significa que todo esté bien."},
+  mirror:"Un buen plan aquí no espera a que haya un problema: agenda el seguimiento y reconoce lo que va bien, no solo lo que hay que corregir. Si sus acciones incluían seguimiento planificado y reconocimiento, ¡bien visto! Si dependían de que {nombre} avisara o solo de corregir errores, recuerden: el silencio no significa que todo esté bien."},
 
  {id:"integracion",label:"Integración y equidad",principio:"Equidad no es igualdad.",
 
@@ -464,7 +464,7 @@ const DIMENSIONS = [
 
    {int:false,t:"Reducir el acompañamiento extra para que el equipo no perciba favoritismos."}],
 
-  mirror:"Un buen plan aquí mantiene el mismo estándar para todos, pero adapta el acompañamiento a lo que cada persona necesita para llegar a él. Si ajustasteis el apoyo según lo que {nombre} necesita, ¡bien! Si distribuisteis todo por igual para “ser justos”, recordad: equidad no es igualdad."}
+  mirror:"Un buen plan aquí mantiene el mismo estándar para todos, pero adapta el acompañamiento a lo que cada persona necesita para llegar a él. Si ajustaron el apoyo según lo que {nombre} necesita, ¡bien! Si distribuyeron todo por igual para “ser justos”, recuerden: equidad no es igualdad."}
 
 ];
 
@@ -498,7 +498,7 @@ const CHALLENGES = {
 
    {t:"Tener una conversación individual: partir de un ejemplo concreto reciente, mostrarle el impacto de posponer esa charla y acordar qué mantener (su calidez) y qué cambiar (afrontar lo incómodo a tiempo).",best:true,porQue:"EIC completo —ejemplo, impacto y acuerdo— y le modelas la conversación difícil que a él/ella le cuesta tener."},
 
-   {t:"Reconocer su buen clima e ir metiendo mejoras poco a poco en los seguimientos.",porQue:"Sin nombrar el ejemplo ni el impacto, el mensaje se diluye y no acordáis nada concreto."}]},
+   {t:"Reconocer su buen clima e ir metiendo mejoras poco a poco en los seguimientos.",porQue:"Sin nombrar el ejemplo ni el impacto, el mensaje se diluye y no acuerdan nada concreto."}]},
 
  actitud:{fortaleza:"Actitud positiva ante los retos",reto:"aguantar de más y aislarse",
 
@@ -649,6 +649,8 @@ window.CONTENT_ES = {
 window.CONTENT_ES.app = {
   sections: {
     sel: 'Proceso de Selección',
+    selA: 'Competencias y prioridades',
+    selB: 'Entrevista y candidatos',
     onb: 'Onboarding',
     ret: 'Retos del día a día',
   },
@@ -657,20 +659,21 @@ window.CONTENT_ES.app = {
   resume: 'Reanudar',
   newGame: 'Empezar de nuevo',
   offline: 'Sin conexión: las decisiones siguen guardadas en este dispositivo.',
-  timeout: 'El tiempo terminó. Registrad la decisión del equipo para continuar.',
+  timeout: 'El tiempo terminó. Registren la decisión del equipo para continuar.',
   selectedIntentional: 'Acciones intencionales elegidas',
-  missedIntentional: 'Acciones intencionales que se os pasaron',
+  missedIntentional: 'Acciones intencionales que dejaron pasar',
   challengeProgress: 'Reto {n} de {total}',
   challengeNext: 'Siguiente reto',
   finish: 'Ver cierre',
   syncPending: 'Registro pendiente de sincronización.',
   syncDone: 'Registro sincronizado.',
-  reqTitle: 'Definid el perfil',
-  prioritiesTitle: 'Preparad la entrevista',
-  candidatesTitle: 'Elegid a quién contratáis',
-  rankingTitle: 'Priorizad el onboarding',
+  reqTitle: 'Definan el perfil',
+  prioritiesTitle: 'Preparen la entrevista',
+  candidatesTitle: 'Elijan a quién contratan',
+  rankingTitle: 'Prioricen el onboarding',
   candidatePhotoAlt: 'Retrato ilustrado de {nombre}',
   cv: 'CV',
   requirements: 'Requisitos',
   challengeLabel: 'Reto',
+  eicNote: 'EIC = Ejemplo, Impacto y Cambio o Consolidación.',
 };

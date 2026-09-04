@@ -1,10 +1,10 @@
 window.CONFIG = {
   subtitle: 'Hacer Florecer el Talento a través del Liderazgo',
-  durationLabel: 'XX',
+  durationLabel: '45',
   numPriorities: 3,
-  timers: { sel: 1500, onb: 900, ret: 1200 },
-  deliberationMin: { req: 0, candidate: 45, reto: 45 },
+  timers: { selA: 600, selB: 900, onb: 600, ret: 600 },
+  deliberationMin: { req: 0, candidate: 0, reto: 0 },
   sheetEndpoint: '',
   storageKey: 'fullbloom',
-  stateVersion: 6,
+  stateVersion: 7,
 };

@@ -1,0 +1,15 @@
+@font-face {
+  font-family: "GothamSSmBook";
+  src: url("fonts/Gotham-Book.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "GothamSSmMedium";
+  src: url("fonts/Gotham-Medium.otf") format("opentype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
