@@ -6,5 +6,5 @@ window.CONFIG = {
   deliberationMin: { req: 0, candidate: 0, reto: 0 },
   sheetEndpoint: 'https://script.google.com/macros/s/AKfycby95N1YvXgdMQiSIFAaCQVAFfeYVUh1H8OWP-ObDuf8HsS3HPP65l1mz80UGf0NIzwO/exec',
   storageKey: 'fullbloom',
-  stateVersion: 7,
+  stateVersion: 8,
 };

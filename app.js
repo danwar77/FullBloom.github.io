@@ -24,6 +24,7 @@
     timeoutNotice: false,
     timeouts: [],
     deliberation: {},
+    interactions: [],
     seleccion: {
       elegidas: [],
       prioridades: [],
@@ -414,8 +415,72 @@
     ensureClock();
   }
 
+  const ACTION_LABELS = {
+    lang: 'Seleccionar idioma', start: 'Comenzar juego', 'req-toggle': 'Cambiar competencia',
+    'req-next': 'Continuar a prioridades', priority: 'Cambiar prioridad', 'prio-next': 'Comenzar entrevista',
+    'puzzle-choice': 'Elegir respuesta de entrevista', 'puzzle-check': 'Confirmar respuesta de entrevista',
+    'puzzle-next': 'Siguiente pregunta', candidate: 'Seleccionar candidato', hire: 'Contratar candidato',
+    'ob-plan': 'Crear plan de onboarding', rank: 'Ordenar dimensión', 'rank-next': 'Confirmar orden de dimensiones',
+    'focus-action': 'Cambiar acción de onboarding', 'focus-confirm': 'Confirmar acciones de onboarding',
+    'focus-next': 'Siguiente dimensión', 'to-retos': 'Comenzar retos',
+    'challenge-choice': 'Elegir respuesta del reto', 'challenge-confirm': 'Registrar decisión del reto',
+    'challenge-next': 'Siguiente reto o finalizar', resume: 'Continuar partida', restart: 'Reiniciar juego',
+  };
+
+  const SCREEN_LABELS = {
+    lang: 'Idioma', welcome: 'Identificación del equipo', req: 'Selección de competencias',
+    priorities: 'Priorización de competencias', puzzle: 'Entrevista', candidates: 'Selección de candidato',
+    obDiag: 'Diagnóstico de onboarding', ranking: 'Prioridades de onboarding', enfoque: 'Plan de onboarding',
+    reveal: 'Resumen de onboarding', retos: 'Retos de liderazgo', close: 'Cierre',
+  };
+
+  function clickedText(button) {
+    const concise = button.querySelector('.candidate-heading h2, .option span, .trait strong');
+    return String(concise?.textContent || button.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function logInteraction(button) {
+    const pressed = button.getAttribute('aria-pressed');
+    const elapsedSeconds = state.startedAt
+      ? Math.max(0, Math.round((Date.now() - new Date(state.startedAt).getTime()) / 1000))
+      : 0;
+    state.interactions.push({
+      sequence: state.interactions.length + 1,
+      at: new Date().toISOString(),
+      elapsedSeconds,
+      screen: state.screen,
+      screenLabel: SCREEN_LABELS[state.screen] || state.screen,
+      action: button.dataset.action,
+      actionLabel: ACTION_LABELS[button.dataset.action] || button.dataset.action,
+      targetId: button.dataset.id || button.dataset.lang || '',
+      text: clickedText(button),
+      selection: pressed === null ? 'acción' : pressed === 'true' ? 'deseleccionar' : 'seleccionar',
+    });
+  }
+
   function record() {
+    const content = C();
+    const poolLabel = (id) => byId(content.POOL, id)?.name || id;
+    const dimensionLabel = (id) => byId(content.DIMENSIONS, id)?.label || id;
+    const selectedCandidate = byId(content.CANDIDATES, state.seleccion.candidato);
+    const enfoqueLabels = Object.fromEntries(Object.entries(state.onboarding.enfoque).map(([dimensionId, choices]) => {
+      const dimension = byId(content.DIMENSIONS, dimensionId);
+      return [dimensionLabel(dimensionId), (choices || []).map((index) => replace(dimension?.actions?.[Number(index)]?.t || index, { nombre: selectedCandidate?.name || '' }))];
+    }));
+    const retos = state.retos.ids.map((id) => {
+      const item = id === 'generic' ? content.GENERIC : content.CHALLENGES[id];
+      const selected = state.retos.choices[id] || [];
+      return {
+        retoId: id,
+        fortaleza: item?.fortaleza || id,
+        reto: item?.reto || '',
+        escenario: replace(item?.esc || '', { nombre: selectedCandidate?.name || '' }),
+        eleccion: selected,
+        eleccionTextos: selected.map((index) => replace(item?.options?.[Number(index)]?.t || index, { nombre: selectedCandidate?.name || '' })),
+      };
+    });
     return {
+      schemaVersion: 2,
       sessionId: state.sessionId,
       alias: state.alias,
       lang: state.lang,
@@ -423,15 +488,23 @@
       finishedAt: state.finishedAt,
       seleccion: {
         elegidas: state.seleccion.elegidas,
+        elegidasLabels: state.seleccion.elegidas.map(poolLabel),
         prioridades: state.seleccion.prioridades,
+        prioridadesLabels: state.seleccion.prioridades.map(poolLabel),
         candidato: state.seleccion.candidato,
+        candidatoNombre: selectedCandidate?.name || '',
+        candidatoPerfil: selectedCandidate ? `${selectedCandidate.tag} · ${selectedCandidate.age}` : '',
       },
       onboarding: {
         ranking: state.onboarding.ranking,
+        rankingLabels: state.onboarding.ranking.map(dimensionLabel),
         enfoque: state.onboarding.enfoque,
+        enfoqueLabels,
         descuidada: state.onboarding.descuidada,
+        descuidadaLabel: dimensionLabel(state.onboarding.descuidada),
       },
-      retos: state.retos.ids.map((id) => ({ retoId: id, eleccion: state.retos.choices[id] || [] })),
+      retos,
+      interactions: state.interactions,
       timeouts: state.timeouts,
     };
   }
@@ -499,6 +572,7 @@
     const button = event.target.closest('button[data-action]');
     if (!button || button.disabled) return;
     const action = button.dataset.action;
+    logInteraction(button);
 
     if (action === 'lang') {
       state.lang = button.dataset.lang;
