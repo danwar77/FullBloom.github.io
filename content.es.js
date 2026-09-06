@@ -402,11 +402,11 @@ const DIMENSIONS = [
 
   actions:[
 
-   {int:true, t:"Acordar con {nombre} qué se espera de ella en sus primeros 30 días y cómo sabrá que va bien."},
+   {int:true, t:"Acordar con {nombre} qué se espera en sus primeros 30 días y cómo sabrá que va bien."},
 
    {int:true, t:"Mostrarle ejemplos concretos de cómo se ve “hacerlo bien” aquí, no solo describírselo."},
 
-   {int:false,t:"Repasar de nuevo con ella toda la información de la inducción, para que no le quede ninguna duda."},
+   {int:false,t:"Repasar de nuevo toda la información de la inducción, para que no le quede ninguna duda."},
 
    {int:false,t:"La práctica del día a día irá aclarando las dudas y prioridades."},
 
@@ -426,11 +426,11 @@ const DIMENSIONS = [
 
    {int:true, t:"Crear un espacio con el equipo para trabajar los Vision Boards (tableros de sueños) e invitar a {nombre} a hacer el suyo."},
 
-   {int:false,t:"Confiar en que, como el equipo es muy abierto, se irá integrando sola."},
+   {int:false,t:"Confiar en que, como el equipo es muy abierto, se irá integrando por su cuenta."},
 
-   {int:false,t:"Dejar que ella marque el ritmo y se acerque cuando se sienta cómoda."}],
+   {int:false,t:"Dejar que {nombre} marque su propio ritmo y se acerque cuando quiera."}],
 
-  mirror:"Un buen plan aquí diseña la integración con acciones concretas: no basta con recibir a alguien, hay que hacerlo sentir parte. Si crearon momentos y apoyos para que {nombre} se integrara, ¡bien! Si lo dejaron al tiempo o a su iniciativa, recuerden: la pertenencia se diseña, no ocurre sola."},
+  mirror:"Un buen plan aquí diseña la integración con acciones concretas: no basta con recibir a alguien, hay que lograr que se sienta parte. Si crearon momentos y apoyos para que {nombre} se integrara, ¡bien! Si lo dejaron al tiempo o a su iniciativa, recuerden: la pertenencia se diseña, no ocurre sola."},
 
  {id:"conversaciones",label:"Conversaciones y seguimiento",principio:"El silencio no significa que todo esté bien.",
 
@@ -444,7 +444,7 @@ const DIMENSIONS = [
 
    {int:false,t:"Estar disponible por si necesita algo; si hay un problema, ya lo dirá."},
 
-   {int:false,t:"Hablar con ella solo cuando aparezca un error que corregir."},
+   {int:false,t:"Hablar con {nombre} solo cuando aparezca un error que corregir."},
 
    {int:false,t:"Preguntarle “¿todo bien?” al pasar y seguir si dice que sí."}],
 
@@ -602,17 +602,17 @@ const CHALLENGES = {
 
 const GENERIC = { multi:true, fortaleza:"Encaja tan bien con el equipo", reto:"la amistad que contamina el trabajo",
 
-  esc:"{nombre} encajó tan bien en el equipo que la sintonía es total: todos se han hecho amigos y hacen planes fuera del trabajo. La armonía se rompe cuando {nombre} se entera de que dos compañeras hablan mal de ella a sus espaldas —la critican por algo que pasó fuera del trabajo— y ahora no le colaboran en nada. {nombre} viene a contártelo con todo detalle de lo de fuera, y critica a sus compañeras.",
+  esc:"{nombre} encajó tan bien en el equipo que la sintonía es total: todos se han hecho amigos y hacen planes fuera del trabajo. La armonía se rompe cuando {nombre} se entera de que dos compañeras hablan mal de {nombre} a sus espaldas —critican algo que pasó fuera del trabajo— y ahora no le colaboran en nada. {nombre} viene a contártelo con todo detalle de lo de fuera, y critica a sus compañeras.",
 
   options:[
 
-   {t:"La escuchas y le das tu opinión y consejo sobre cómo debería resolverlo.",porQue:"Resuelves por ella; el conflicto es suyo y la vuelves dependiente en vez de desarrollar su capacidad de gestionarlo."},
+   {t:"Escuchas a {nombre} y le das tu opinión y consejo sobre cómo debería resolverlo.",porQue:"Resuelves por {nombre}; el conflicto es suyo y generas dependencia en vez de desarrollar su capacidad de gestionarlo."},
 
    {t:"Convocas una reunión de urgencia con todo el equipo para resolverlo juntos.",porQue:"Expones en público un conflicto personal, fuerzas bandos y puedes escalarlo. Primero entender, no convocar."},
 
    {t:"No dejas que siga hablando de lo de fuera del trabajo y reconduces a hechos concretos dentro del trabajo.",valid:true,porQue:"Pones el límite correcto: lo personal de fuera no es tu jurisdicción; lo que sí gestionas es el impacto en el trabajo (que no colaboren)."},
 
-   {t:"Le haces preguntas sobre cómo cree que ella podría resolverlo con sus compañeras.",valid:true,porQue:"Coaching y empoderamiento: devuelves la propiedad del problema a quien lo tiene."},
+   {t:"Le haces preguntas sobre cómo cree que podría resolverlo con sus compañeras.",valid:true,porQue:"Coaching y empoderamiento: devuelves la propiedad del problema a quien lo tiene."},
 
    {t:"Hablas individualmente con las implicadas para que te cuenten su versión de los hechos.",porQue:"Recoger “versiones” de un tema personal alimenta el chisme y te mete de árbitro en algo de fuera del trabajo. Es justo lo que no quieres alimentar."},
 

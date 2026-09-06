@@ -338,10 +338,10 @@
         const choice = item.options[Number(index)];
         return `<li class="${choice.valid ? 'feedback-valid' : 'feedback-invalid'}"><b>${choice.valid ? content.ui.suma : content.ui.porQueNoMejorReto}</b> ${esc(choice.porQue)}</li>`;
       }).join('');
-      return `<div class="challenge-feedback"><ul>${details}</ul><p class="rule">${esc(item.mejorEnfoque)}</p></div>`;
+      return `<div class="challenge-feedback"><ul>${details}</ul><p class="rule">${esc(item.mejorEnfoque)}</p><p class="eic-note">${esc(content.app.eicNote)}</p></div>`;
     }
     const choice = item.options[Number(selected[0])];
-    return `<p class="puzzle-feedback ${choice.best ? 'good' : 'bad'}"><b>${esc(choice.best ? content.ui.porQueMejor : content.ui.porQueNoMejorReto)}</b> ${esc(replace(choice.porQue, { nombre: candidate().name }))}</p>`;
+    return `<p class="puzzle-feedback ${choice.best ? 'good' : 'bad'}"><b>${esc(choice.best ? content.ui.porQueMejor : content.ui.porQueNoMejorReto)}</b> ${esc(replace(choice.porQue, { nombre: candidate().name }))}</p><p class="eic-note">${esc(content.app.eicNote)}</p>`;
   }
 
   function renderChallenge() {
@@ -366,7 +366,7 @@
     const action = feedback
       ? primary(state.retos.index + 1 < state.retos.ids.length ? content.app.challengeNext : content.app.finish, 'challenge-next')
       : primary(content.ui.register, 'challenge-confirm', !ready || wait > 0, `data-deliberation="${waitKey}" data-duration="reto" data-ready="${ready ? '1' : '0'}"`);
-    app.innerHTML = shell(`<p class="eyebrow">${esc(content.app.sections.ret)} · ${esc(progress)}</p><h1>${esc(item.fortaleza)}</h1><p class="lead">${esc(replace(content.ui.retoIntro, { nombre: candidate().name }))}</p><p class="eic-note">${esc(content.app.eicNote)}</p><p class="rule"><b>${esc(content.app.challengeLabel)}:</b> ${esc(item.reto)}</p><h2>${esc(replace(item.esc, { nombre: candidate().name }))}</h2><div class="options case-options">${options}</div>${note}<div class="action-bar"><p class="helper" data-delib-count="${waitKey}">${wait ? fmt(wait) : ''}</p>${action}</div>`);
+    app.innerHTML = shell(`<p class="eyebrow">${esc(content.app.sections.ret)} · ${esc(progress)}</p><h1>${esc(item.fortaleza)}</h1><p class="lead">${esc(replace(content.ui.retoIntro, { nombre: candidate().name }))}</p><p class="rule"><b>${esc(content.app.challengeLabel)}:</b> ${esc(item.reto)}</p><h2>${esc(replace(item.esc, { nombre: candidate().name }))}</h2><div class="options case-options">${options}</div>${note}<div class="action-bar"><p class="helper" data-delib-count="${waitKey}">${wait ? fmt(wait) : ''}</p>${action}</div>`);
   }
 
   function finishGame() {
